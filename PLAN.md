@@ -3,18 +3,18 @@
 Fichier de reprise : session qui repart lit **ça** puis `CLAUDE.md`. Mettre à jour à chaque étape verte.
 
 ## État au 2026-09-20
-- **`v0.4.0` publiée** (release + jar) : coque modélisée, six places avec le pilote à la barre,
-  sprites d'items faits main. **Pas déployée** — ni `server/mods/`, ni pack packwiz : choix nistroy
-  2026-09-20, coque et moteurs partiront ensemble pour n'imposer qu'une seule mise à jour aux
-  joueurs. Le serveur tourne donc toujours en `v0.3.1`.
-- Contenu v0.3.x (en ligne) : soute (réservoir + slot moteur + coffre 27), grande barque 6 places,
-  3 moteurs (`motor` 16 / `big_motor` 24 / `double_motor` 32 blocs/s, grande coque ×0,85), recettes à
-  forme fixe, config sans plafond de vitesse.
-- **Chantier en cours : les moteurs.** Hors-bord validé par nistroy 2026-09-20, **les deux barques
-  à l'extérieur** (un seul modèle partagé, chaque coque passe son point d'accrochage). Fait : maquettes
-  `tools/art/motor.bbmodel` et `big_motor.bbmodel`, textures générées, `MotorboatRenderer` réécrit
-  (deux couches, plus de mise à l'échelle). Reste : vérifier dans `runClient`, puis `0.5.0` + release,
-  puis le déploiement reporté (§Étapes 8).
+- **`v0.5.0` : coque + moteurs, prête, pas déployée.** Le serveur tourne toujours en `v0.3.1` — ni
+  `server/mods/`, ni pack packwiz. Déploiement groupé voulu par nistroy (une seule mise à jour à faire
+  faire aux joueurs) : **en attente de son go**, gestes rappelés en §Étapes 8.
+- `v0.4.0` (release seule) : coque modélisée, six places, sprites d'items faits main.
+- `v0.5.0` : hors-bord accrochés au tableau sur les deux barques (un modèle, un accrochage par coque),
+  gros moteur avec son propre modèle, coque allongée 42 → 48 px pour que les six places gardent
+  l'écart de vanilla, hitbox laissée à 2,25.
+- Contenu v0.3.x (ce qui tourne en ligne) : soute (réservoir + slot moteur + coffre 27), grande barque
+  6 places, 3 moteurs (16 / 24 / 32 blocs/s, grande coque ×0,85), recettes à forme fixe, config sans
+  plafond de vitesse.
+- **Au déploiement, ne pas oublier** : `MODS.md` du dépôt serveur (version du mod) et prévenir les
+  joueurs — client et serveur doivent avoir la même version, sinon les objets se mélangent (§Pièges).
 
 ## Demande (nistroy 2026-09-20)
 Coque de la grande barque jugée trop « radeau » (caisse : fond plat + 4 parois droites). **nistroy
