@@ -15,7 +15,6 @@ import zlib
 ASSETS = pathlib.Path(__file__).resolve().parent.parent / "src/main/resources/assets/motorboat/textures"
 
 CLEAR = (0, 0, 0, 0)
-OUTLINE = (26, 26, 29, 255)
 IRON = (82, 85, 92, 255)
 IRON_LIGHT = (107, 111, 120, 255)
 IRON_DARK = (58, 60, 66, 255)
@@ -213,105 +212,8 @@ def big_hull_texture():
     image.save(ASSETS / "entity/big_motorboat.png")
 
 
-def big_motorboat_item():
-    image = Image(16, 16)
-    # Coque longue vue de trois quarts, moteur à la poupe (à gauche).
-    image.rect(0, 7, 16, 7, OUTLINE)
-    image.rect(1, 8, 14, 5, WOOD)
-    image.rect(1, 8, 14, 1, WOOD_LIGHT)
-    image.rect(1, 11, 14, 2, WOOD_DARK)
-    image.rect(2, 13, 12, 1, WOOD_DARK)
-    # Trois bancs.
-    for x in (4, 7, 10):
-        image.rect(x, 9, 2, 2, WOOD_DARK)
-    image.rect(0, 2, 5, 6, OUTLINE)
-    image.rect(1, 3, 3, 4, IRON)
-    image.rect(1, 3, 3, 1, IRON_LIGHT)
-    image.rect(1, 5, 3, 1, COPPER)
-    image.rect(2, 0, 3, 3, OUTLINE)
-    image.rect(3, 0, 1, 2, PIPE)
-    image.save(ASSETS / "item/big_motorboat.png")
-
-
-def motor_item():
-    image = Image(16, 16)
-    image.rect(6, 1, 4, 4, OUTLINE)
-    image.rect(7, 2, 2, 3, PIPE)
-    image.rect(7, 2, 2, 1, HOLE)
-    image.rect(2, 4, 12, 10, OUTLINE)
-    image.rect(3, 5, 10, 8, IRON)
-    image.rect(3, 5, 10, 1, IRON_LIGHT)
-    image.rect(3, 12, 10, 1, IRON_DARK)
-    image.rect(3, 8, 10, 2, COPPER)
-    image.rect(3, 10, 10, 1, COPPER_DARK)
-    image.rect(4, 6, 1, 1, IRON_LIGHT)
-    image.rect(11, 6, 1, 1, IRON_LIGHT)
-    image.rect(4, 11, 1, 1, IRON_DARK)
-    image.rect(11, 11, 1, 1, IRON_DARK)
-    image.save(ASSETS / "item/motor.png")
-
-
-def big_motor_item():
-    """Gros moteur : même bloc que le moteur de base, en plus massif."""
-    image = Image(16, 16)
-    image.rect(5, 0, 6, 4, OUTLINE)
-    image.rect(6, 0, 4, 3, PIPE)
-    image.rect(6, 0, 4, 1, HOLE)
-    image.rect(1, 3, 14, 13, OUTLINE)
-    image.rect(2, 4, 12, 11, IRON)
-    image.rect(2, 4, 12, 1, IRON_LIGHT)
-    image.rect(2, 14, 12, 1, IRON_DARK)
-    image.rect(2, 8, 12, 2, COPPER)
-    image.rect(2, 10, 12, 1, COPPER_DARK)
-    for x in (3, 12):
-        image.rect(x, 5, 1, 1, IRON_LIGHT)
-        image.rect(x, 12, 1, 1, IRON_DARK)
-    image.save(ASSETS / "item/big_motor.png")
-
-
-def double_motor_item():
-    """Double moteur : deux blocs accouplés, un échappement chacun."""
-    image = Image(16, 16)
-    for left in (0, 8):
-        image.rect(left + 2, 1, 4, 4, OUTLINE)
-        image.rect(left + 3, 1, 2, 3, PIPE)
-        image.rect(left + 3, 1, 2, 1, HOLE)
-        image.rect(left, 4, 8, 12, OUTLINE)
-        image.rect(left + 1, 5, 6, 10, IRON)
-        image.rect(left + 1, 5, 6, 1, IRON_LIGHT)
-        image.rect(left + 1, 14, 6, 1, IRON_DARK)
-        image.rect(left + 1, 9, 6, 2, COPPER)
-        image.rect(left + 1, 11, 6, 1, COPPER_DARK)
-        image.rect(left + 1, 6, 1, 1, IRON_LIGHT)
-        image.rect(left + 6, 6, 1, 1, IRON_LIGHT)
-    image.save(ASSETS / "item/double_motor.png")
-
-
-def motorboat_item():
-    image = Image(16, 16)
-    # Coque vue de trois quarts : deux rangées de planches entre deux bords sombres.
-    image.rect(1, 8, 14, 6, OUTLINE)
-    image.rect(2, 9, 12, 4, WOOD)
-    image.rect(2, 11, 12, 2, WOOD_DARK)
-    image.rect(2, 9, 12, 1, (162, 128, 84, 255))
-    image.rect(3, 13, 10, 1, WOOD_DARK)
-    # Moteur à la poupe (à gauche) et son échappement.
-    image.rect(1, 3, 5, 6, OUTLINE)
-    image.rect(2, 4, 3, 4, IRON)
-    image.rect(2, 4, 3, 1, IRON_LIGHT)
-    image.rect(2, 6, 3, 1, COPPER)
-    image.rect(3, 1, 3, 3, OUTLINE)
-    image.rect(4, 1, 1, 2, PIPE)
-    image.save(ASSETS / "item/motorboat.png")
-
-
 if __name__ == "__main__":
     gui_texture()
     engine_texture()
     big_hull_texture()
-    motor_item()
-    big_motor_item()
-    double_motor_item()
-    motorboat_item()
-    big_motorboat_item()
     print("textures générées dans", ASSETS)

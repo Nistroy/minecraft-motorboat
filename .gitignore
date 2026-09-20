@@ -8,3 +8,4 @@ bin/
 *.iml
 .vscode/
 logs/
+__pycache__/
