@@ -3,11 +3,18 @@
 Fichier de reprise : session qui repart lit **ça** puis `CLAUDE.md`. Mettre à jour à chaque étape verte.
 
 ## État au 2026-09-20
-- `v0.3.1` publiée, **déployée partout** : `server/mods/` du dépôt `minecraft-server` + pack packwiz `main`
-  (`pack/mods/motorboat.pw.toml`). Test en jeu par nistroy : OK (« tout marche super bien »).
-- Contenu v0.3.x : soute (réservoir + slot moteur + coffre 27), grande barque 6 places, 3 moteurs
-  (`motor` 16 / `big_motor` 24 / `double_motor` 32 blocs/s, grande coque ×0,85), recettes à forme fixe,
-  config sans plafond de vitesse.
+- **`v0.4.0` publiée** (release + jar) : coque modélisée, six places avec le pilote à la barre,
+  sprites d'items faits main. **Pas déployée** — ni `server/mods/`, ni pack packwiz : choix nistroy
+  2026-09-20, coque et moteurs partiront ensemble pour n'imposer qu'une seule mise à jour aux
+  joueurs. Le serveur tourne donc toujours en `v0.3.1`.
+- Contenu v0.3.x (en ligne) : soute (réservoir + slot moteur + coffre 27), grande barque 6 places,
+  3 moteurs (`motor` 16 / `big_motor` 24 / `double_motor` 32 blocs/s, grande coque ×0,85), recettes à
+  forme fixe, config sans plafond de vitesse.
+- **Chantier en cours : les moteurs** (voir §Backlog pour le pourquoi). Silhouette de hors-bord
+  proposée à nistroy 2026-09-20, **en attente de sa validation** : chape à cheval sur le tableau,
+  capot derrière, arbre + embase + hélice sous la flottaison, barre franche vers le pilote, tout en
+  tailles entières. Question ouverte : la barque 2 places partage le modèle — moteur dehors pour elle
+  aussi, ou deux modèles séparés ?
 
 ## Demande (nistroy 2026-09-20)
 Coque de la grande barque jugée trop « radeau » (caisse : fond plat + 4 parois droites). **nistroy
@@ -119,9 +126,9 @@ le premier monté pilote.
       ailes** → signe de rotation corrigé (§Conversion), à revérifier. Reste à regarder : assise du
       pilote sur la banquette, moteur devant lui (il faut **poser un moteur dans la soute**, sans
       moteur rien n'est dessiné, c'est voulu), pas de trou à l'étrave.
-- [ ] 7. Version `0.4.0`, PR, merge, tag `v0.4.0` → release (workflow : tag = `version` de
-      `gradle.properties`, sinon il échoue).
-- [ ] 8. Déploiement, **les deux ensemble** : `server/mods/` du dépôt serveur + `pack/mods/motorboat.pw.toml`
+- [x] 7. `0.4.0` : PR #8 mergée, tag `v0.4.0`, release + jar publiés 2026-09-20.
+- [ ] 8. Déploiement — **reporté à la 0.5.0, avec les moteurs** (nistroy 2026-09-20). Rappel des gestes,
+      **les deux ensemble** : `server/mods/` du dépôt serveur + `pack/mods/motorboat.pw.toml`
       (url + sha256 de la release, puis `~/go/bin/packwiz refresh`). Avant : sauvegarde hors rotation
       (`./mc cmd save-off` → `save-all flush` → `./mc backup` → `save-on`, puis renommer `pre-<change>_…`).
       Serveur : `./mc stop`/`start` sans demander si 0 joueur.
