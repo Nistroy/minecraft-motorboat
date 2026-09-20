@@ -11,17 +11,14 @@ import net.minecraft.world.phys.Vec3;
 /**
  * Grande barque à moteur : même moteur et même réservoir, coque plus longue et six places.
  *
- * <p>Places assises : trois rangs de deux, le pilote (premier passager) à l'avant gauche. Repère
- * des points d'attache, relevé au {@code javap} sur {@code Boat.getPassengerAttachmentPoint} (1.21.1) :
- * {@code new Vec3(travers, hauteur, avant).yRot(-yRot)} — X en travers, **Z vers la proue**.
+ * <p>Places assises : voir {@link SeatPlan} — le pilote (premier passager) est sur la banquette de
+ * poupe, devant le moteur. Repère des points d'attache, relevé au {@code javap} sur
+ * {@code Boat.getPassengerAttachmentPoint} (1.21.1) : {@code new Vec3(travers, hauteur, avant).yRot(-yRot)}
+ * — X en travers, **Z vers la proue**.
  */
 public class BigMotorboatEntity extends MotorboatEntity {
-    /** Six places : trois rangs (proue, milieu, poupe) de deux. */
+    /** Six places : la barre, deux rangs de deux et le banc d'étrave ({@link SeatPlan}). */
     public static final int MAX_PASSENGERS = 6;
-
-    private static final double[] ROW_OFFSETS = {0.7, 0.0, -0.7};
-
-    private static final double SEAT_OFFSET = 0.4;
 
     public BigMotorboatEntity(EntityType<? extends BigMotorboatEntity> type, Level level) {
         super(type, level);
@@ -47,10 +44,9 @@ public class BigMotorboatEntity extends MotorboatEntity {
 
     @Override
     protected Vec3 getPassengerAttachmentPoint(Entity passenger, EntityDimensions dimensions, float scale) {
-        int seat = Math.max(0, getPassengers().indexOf(passenger));
-        double across = seat % 2 == 0 ? -SEAT_OFFSET : SEAT_OFFSET;
-        double along = ROW_OFFSETS[Math.min(seat / 2, ROW_OFFSETS.length - 1)];
-        return new Vec3(across, dimensions.height() / 3.0, along).yRot(-getYRot() * ((float) Math.PI / 180F));
+        SeatPlan.Seat seat = SeatPlan.seat(getPassengers().indexOf(passenger));
+        return new Vec3(seat.across(), seat.height(), seat.along())
+                .yRot(-getYRot() * ((float) Math.PI / 180F));
     }
 
     @Override

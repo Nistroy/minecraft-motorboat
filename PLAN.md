@@ -103,13 +103,19 @@ le premier monté pilote.
       (pixels identiques à la planche, vérifié) ; planche gardée hors de `assets/`.
 - [x] 4. Fonctions de sprites d'items retirées de `tools/generate_textures.py` (il les écrasait),
       en-tête + carte de `CLAUDE.md` à jour.
-- [ ] 2. `.bbmodel` → `BigMotorboatModel.createBodyModel()` : cubes `from`/`to`/`origin`/`rotation`/`uv`,
-      attention `inflate` et pivots ; convertir Y-up Blockbench vers le repère du mod.
+- [x] 2. `.bbmodel` → `BigMotorboatModel.createBodyModel()` : 21 pièces traduites par script
+      (scratchpad, `bbmodel_to_java.py`), plan d'eau ramené à 30 × 24. Piège rencontré : les cubes
+      hors groupe ont `PartPose.ZERO` alors que la quille est en `y_mod = 1` → poser `py = 1` dans la
+      conversion, sinon tout descend d'1 px.
 - [x] 3a. Texture de coque générée depuis le `.bbmodel` (`big_hull_texture()` réécrit, table
       `BIG_HULL_BOXES` supprimée), `256 × 128` inchangé. À refaire à la main plus tard si nistroy veut.
-- [ ] 5. Sièges : table de 6 places ci-dessus (§Plan de sièges), décalage du moteur, assise remontée.
-      `sized()` inchangé.
-- [ ] 6. `./gradlew build` vert **et** `./gradlew runClient` (le rendu ne se vérifie pas autrement).
+- [x] 5. Sièges : classe pure `SeatPlan` (6 places, testée : symétrie, barre la plus à l'arrière et
+      la plus haute, index écrêté), `BigMotorboatEntity` y délègue ; moteur reculé de 2 px dans
+      `BigMotorboatRenderer` (`ENGINE_OFFSET`), ombre portée 1,25. `sized()` inchangé.
+- [ ] 6. `./gradlew build` vert (fait, tests compris) **et** `./gradlew runClient` — reste à faire,
+      le rendu ne se vérifie pas autrement. À regarder : sens de l'étrave (si elle part du mauvais
+      bord, c'est le signe de la rotation Y), assise du pilote sur la banquette, moteur devant lui,
+      pas de trou à l'étrave, texture à l'endroit.
 - [ ] 7. Version `0.4.0`, PR, merge, tag `v0.4.0` → release (workflow : tag = `version` de
       `gradle.properties`, sinon il échoue).
 - [ ] 8. Déploiement, **les deux ensemble** : `server/mods/` du dépôt serveur + `pack/mods/motorboat.pw.toml`
@@ -131,8 +137,13 @@ le premier monté pilote.
   **synchronisé** (le client du pilote calcule les attaches), le choix du siège libre le plus proche
   dans `interact`, et redéfinir `getControllingPassenger` pour que ce soit l'occupant de la barre qui
   pilote. À part, après la coque.
-- **Trois vraies formes de moteur** : aujourd'hui un seul modèle 4×7×5 pour les trois paliers (gros =
-  ×1,35, double = deux copies). Demanderait de l'art en plus.
+- **Modèles de moteur** (avis rendu à nistroy 2026-09-20, à faire après la coque) : garder le double
+  tel quel (deux blocs à ±3, 1 px d'écart — deux moteurs, c'est ce qu'il faut lire) ; **refaire le
+  gros**, qui n'est que le bloc de base ×1,35 : 4 px → 5,4, les texels tombent hors grille et ça rend
+  flou. Modèle dédié en tailles entières. Refaire aussi le moteur de base (capot, arbre, hélice, barre
+  franche vers le pilote) : il est désormais pile devant lui. **Le modèle de base doit rester petit**,
+  c'est le seul admis sur la barque 2 places (`MotorTier.fitsHull`) ; gros et double ne s'affichent que
+  sur la grande coque. Même montage que la coque : `.bbmodel` dans `tools/art/`, texture générée.
 
 ## Reste en attente (hors art)
 - Supprimer la branche `test/motorboat-0-3-0` (dépôt serveur) et la pré-version `test-0.3.0-rc1` quand
