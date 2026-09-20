@@ -3,11 +3,18 @@
 Fichier de reprise : session qui repart lit **ça** puis `CLAUDE.md`. Mettre à jour à chaque étape verte.
 
 ## État au 2026-09-20
-- `v0.3.1` publiée, **déployée partout** : `server/mods/` du dépôt `minecraft-server` + pack packwiz `main`
-  (`pack/mods/motorboat.pw.toml`). Test en jeu par nistroy : OK (« tout marche super bien »).
-- Contenu v0.3.x : soute (réservoir + slot moteur + coffre 27), grande barque 6 places, 3 moteurs
-  (`motor` 16 / `big_motor` 24 / `double_motor` 32 blocs/s, grande coque ×0,85), recettes à forme fixe,
-  config sans plafond de vitesse.
+- **`v0.4.0` publiée** (release + jar) : coque modélisée, six places avec le pilote à la barre,
+  sprites d'items faits main. **Pas déployée** — ni `server/mods/`, ni pack packwiz : choix nistroy
+  2026-09-20, coque et moteurs partiront ensemble pour n'imposer qu'une seule mise à jour aux
+  joueurs. Le serveur tourne donc toujours en `v0.3.1`.
+- Contenu v0.3.x (en ligne) : soute (réservoir + slot moteur + coffre 27), grande barque 6 places,
+  3 moteurs (`motor` 16 / `big_motor` 24 / `double_motor` 32 blocs/s, grande coque ×0,85), recettes à
+  forme fixe, config sans plafond de vitesse.
+- **Chantier en cours : les moteurs** (voir §Backlog pour le pourquoi). Silhouette de hors-bord
+  proposée à nistroy 2026-09-20, **en attente de sa validation** : chape à cheval sur le tableau,
+  capot derrière, arbre + embase + hélice sous la flottaison, barre franche vers le pilote, tout en
+  tailles entières. Question ouverte : la barque 2 places partage le modèle — moteur dehors pour elle
+  aussi, ou deux modèles séparés ?
 
 ## Demande (nistroy 2026-09-20)
 Coque de la grande barque jugée trop « radeau » (caisse : fond plat + 4 parois droites). **nistroy
@@ -119,9 +126,9 @@ le premier monté pilote.
       ailes** → signe de rotation corrigé (§Conversion), à revérifier. Reste à regarder : assise du
       pilote sur la banquette, moteur devant lui (il faut **poser un moteur dans la soute**, sans
       moteur rien n'est dessiné, c'est voulu), pas de trou à l'étrave.
-- [ ] 7. Version `0.4.0`, PR, merge, tag `v0.4.0` → release (workflow : tag = `version` de
-      `gradle.properties`, sinon il échoue).
-- [ ] 8. Déploiement, **les deux ensemble** : `server/mods/` du dépôt serveur + `pack/mods/motorboat.pw.toml`
+- [x] 7. `0.4.0` : PR #8 mergée, tag `v0.4.0`, release + jar publiés 2026-09-20.
+- [ ] 8. Déploiement — **reporté à la 0.5.0, avec les moteurs** (nistroy 2026-09-20). Rappel des gestes,
+      **les deux ensemble** : `server/mods/` du dépôt serveur + `pack/mods/motorboat.pw.toml`
       (url + sha256 de la release, puis `~/go/bin/packwiz refresh`). Avant : sauvegarde hors rotation
       (`./mc cmd save-off` → `save-all flush` → `./mc backup` → `save-on`, puis renommer `pre-<change>_…`).
       Serveur : `./mc stop`/`start` sans demander si 0 joueur.
@@ -147,6 +154,22 @@ le premier monté pilote.
   franche vers le pilote) : il est désormais pile devant lui. **Le modèle de base doit rester petit**,
   c'est le seul admis sur la barque 2 places (`MotorTier.fitsHull`) ; gros et double ne s'affichent que
   sur la grande coque. Même montage que la coque : `.bbmodel` dans `tools/art/`, texture générée.
+
+- **Saut et figures** (idée nistroy 2026-09-20, visée 0.5) : espace en pilotant → impulsion Y (~0,6 →
+  ~2,5 blocs, ~1 s en l'air ; `floatBoat` amortit le Y de 0,75 sous la ligne d'eau, puis balistique,
+  gravité −0,04/tick, friction sur x/z seulement — javap 1.21.1). Direction tenue au décollage =
+  figure **purement visuelle** dans `applyBoatPose` : gauche/droite tonneau (axe Z), avant/arrière
+  salto (axe X), rien saut simple ; 360° sur la durée du vol, donc retombe à plat. La hitbox ne tourne
+  jamais (AABB alignées) et les passagers restent dessinés debout. Pilotage en l'air déjà acquis :
+  `controlBoat` n'est gardé que par `isVehicle()`, pas par le statut. Coût : bouffée de carburant +
+  cooldown (~3 s) qui **ne démarre qu'à l'amerrissage** (pas d'enchaînement en l'air), compteur
+  serveur synchronisé comme `Fuel` → le client prédit et affiche ; son + actionbar quand c'est prêt,
+  message de refus si trop tôt. **Piège** : `checkFallDamage` tue le bateau au-delà de 3 blocs de
+  chute hors de l'eau, et `remove()` vide la soute par terre → avaler la distance de chute tant que la
+  figure est en cours. Plomberie : touche lue côté client (espace ne fait rien en bateau), impulsion
+  appliquée par le client du pilote (il fait autorité sur la position), payload vers le serveur qui
+  valide le cooldown et rediffuse la figure pour l'animation des autres clients ; logique pure testée
+  dans `Trick.java`.
 
 ## Reste en attente (hors art)
 - Supprimer la branche `test/motorboat-0-3-0` (dépôt serveur) et la pré-version `test-0.3.0-rc1` quand
