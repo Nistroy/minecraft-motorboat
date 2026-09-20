@@ -56,6 +56,12 @@ trop encombrants pour la barque 2 places et ne se posent que sur la grande.
    PPP
    ```
 
+### La houle
+
+Les deux barques tanguent comme sur des vagues : l'étrave sautille, et plus on met les gaz plus elle
+se lève. C'est de la décoration — la barque se pilote exactement pareil, la houle ne fait ni dériver
+ni perdre de vitesse, et personne ne tombe à l'eau. Deux barques côte à côte prennent la même vague.
+
 ### La soute
 
 **Accroupi + clic droit à main vide** : la soute s'ouvre.

@@ -5,6 +5,7 @@ import com.mojang.math.Axis;
 import io.github.nistroy.motorboat.MotorTier;
 import io.github.nistroy.motorboat.Motorboat;
 import io.github.nistroy.motorboat.MotorboatEntity;
+import io.github.nistroy.motorboat.Wave;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -183,7 +184,12 @@ public class MotorboatRenderer extends BoatRenderer {
 
     @Override
     public void render(Boat boat, float yaw, float partialTicks, PoseStack pose, MultiBufferSource buffers, int light) {
+        // La coque de cette barque-là est dessinée par BoatRenderer, dans son propre repère : la
+        // houle doit l'envelopper, sinon le moteur tangue tout seul et se décroche du tableau.
+        pose.pushPose();
+        applyWave(pose, boat, yaw, partialTicks);
         super.render(boat, yaw, partialTicks, pose, buffers, light);
+        pose.popPose();
         pose.pushPose();
         applyBoatPose(pose, boat, yaw, partialTicks);
         renderEngine(engine, bigEngine, VANILLA_MOUNT, pose, buffers, light, motorOf(boat));
@@ -191,12 +197,44 @@ public class MotorboatRenderer extends BoatRenderer {
     }
 
     /**
+     * Houle : incline la coque comme si elle naviguait sur des vagues, étrave qui sautille et nez
+     * qui se lève en vitesse. Angles et amplitudes dans {@link Wave}, qui dit aussi pourquoi ils
+     * restent petits. Purement visuel : rien ne bouge côté entité, donc rien à synchroniser.
+     *
+     * <p>À poser là où le repère est encore aligné sur le monde et centré sur l'entité — le pivot
+     * tombe alors à la flottaison, au milieu de la coque. Le lacet sert à entrer dans le repère de
+     * la barque (tangage = X, roulis = Z, l'étrave est en −Z avant le retournement de
+     * {@link #applyBoatPose}) puis à en ressortir : l'appelant retrouve son repère intact.
+     *
+     * <p>Rien hors de l'eau : à terre ou en vol, la coque reste droite.
+     */
+    public static void applyWave(PoseStack pose, Boat boat, float yaw, float partialTicks) {
+        if (!boat.isInWater()) {
+            return;
+        }
+        // Vitesse prise sur le déplacement du dernier tick : getDeltaMovement() vaut ~0 sur les
+        // barques des autres joueurs, que le client interpole au lieu de les simuler.
+        double speed = Math.hypot(boat.getX() - boat.xOld, boat.getZ() - boat.zOld);
+        Wave.Motion motion = Wave.at(
+                boat.getX(partialTicks),
+                boat.getZ(partialTicks),
+                (double) boat.level().getGameTime() + partialTicks,
+                speed);
+        pose.translate(0.0, motion.heaveBlocks(), 0.0);
+        pose.mulPose(Axis.YP.rotationDegrees(180.0F - yaw));
+        pose.mulPose(Axis.XP.rotationDegrees(motion.pitchDegrees()));
+        pose.mulPose(Axis.ZP.rotationDegrees(motion.rollDegrees()));
+        pose.mulPose(Axis.YP.rotationDegrees(yaw - 180.0F));
+    }
+
+    /**
      * Repère du modèle de bateau : reprend, dans l'ordre, les transformations de
      * {@code BoatRenderer.render} (relevées au javap sur 1.21.1), secousse de dégâts et colonne à
-     * bulles comprises. Partagé avec la grande barque pour que les deux coques et le moteur restent
-     * alignés.
+     * bulles comprises, précédées de la houle ({@link #applyWave}). Partagé avec la grande barque
+     * pour que les deux coques et le moteur restent alignés.
      */
     public static void applyBoatPose(PoseStack pose, Boat boat, float yaw, float partialTicks) {
+        applyWave(pose, boat, yaw, partialTicks);
         pose.translate(0.0F, 0.375F, 0.0F);
         pose.mulPose(Axis.YP.rotationDegrees(180.0F - yaw));
         float hurtTime = (float) boat.getHurtTime() - partialTicks;

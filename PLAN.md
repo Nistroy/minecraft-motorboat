@@ -15,6 +15,8 @@ Fichier de reprise : session qui repart lit **ça** puis `CLAUDE.md`. Mettre à 
   plafond de vitesse.
 - **Au déploiement, ne pas oublier** : `MODS.md` du dépôt serveur (version du mod) et prévenir les
   joueurs — client et serveur doivent avoir la même version, sinon les objets se mélangent (§Pièges).
+- **Houle** (demande nistroy 2026-09-20) : codée, testée, **pas encore vue en jeu** — branche
+  `feat/wave-motion`, non taguée. Amplitudes à valider à l'œil (§Houle).
 
 ## Demande (nistroy 2026-09-20)
 Coque de la grande barque jugée trop « radeau » (caisse : fond plat + 4 parois droites). **nistroy
@@ -163,6 +165,31 @@ translate ensuite jusqu'à son accrochage, d'où un seul modèle pour les deux b
 - Double = deux hors-bord de base à ±4 en Z (capot de 6 de large → 2 px d'écart).
 - Textures `64 × 64` générées par `engine_textures()` depuis les maquettes, teintes par famille de nom
   (`ENGINE_TONES`) ; bandeau de cuivre sur les flancs du capot, seule touche de couleur.
+
+## Houle (`Wave` + `MotorboatRenderer.applyWave`, 2026-09-20)
+Étrave qui sautille sur les vagues, nez qui se lève en vitesse. **Purement visuel** : rien côté
+entité, donc rien à synchroniser, pas de changement de protocole, serveur pas concerné.
+- Phase = heure du monde **et** position (`2π(t/période + (x·dx+z·dz)/longueur)`) → champ de vagues :
+  barques voisines accordées, tous les clients d'accord sans réseau. Deux trains (houle 47 ticks /
+  11 blocs, clapot 29 ticks / 6,5 blocs, directions croisées) pondérés à 1 → angles bornés.
+- Amplitude montante avec la vitesse : 0,8° à quai → 3,5° à 12 blocs/s ; **assiette de déjaugeage**
+  en plus, 0 → 3,0° en `f(2−f)` sur 0 → 20 blocs/s. Pilonnement ±0,05 bloc. Tangage max 6,5°.
+- Petites amplitudes **obligatoires** : les attaches de `SeatPlan` ignorent le tangage, les passagers
+  restent debout → 0,08 bloc d'écart au pire au banc d'étrave. Hitbox jamais inclinée (AABB).
+- Pose : `applyWave` se pose dans le repère **du monde**, à l'origine de l'entité (pivot à la
+  flottaison) ; elle entre dans le repère coque par le lacet et en ressort. Tangage `Axis.XP` positif
+  = proue qui lève, roulis `Axis.ZP` — vérifié hors jeu en rejouant la chaîne (`applyWave` +
+  `applyBoatPose`) sous JOML : proue +0,078 / poupe −0,079 bloc à +3°, identique à tous les lacets.
+- Appelée **deux fois par rendu** pour la barque 2 places : sa coque est dessinée par `BoatRenderer`
+  (donc `super.render` enveloppé), le moteur passe par `applyBoatPose`. La grande coque n'a rien de
+  spécial, tout passe par `applyBoatPose`. Effet de bord accepté : la plaque de nom de la barque
+  2 places tangue avec la coque (elle est dessinée dans `super.render`), pas celle de la grande.
+- Vitesse mesurée sur `getX() − xOld`, pas `getDeltaMovement()` : nul sur les barques des autres
+  joueurs, que le client interpole. Position lue interpolée (`getX(partialTicks)`) — à pleine vitesse
+  la phase avance de ~1 rad/tick, la position du tick seul saccade.
+- Rien hors de l'eau (`isInWater()`, `Boat.getStatus()` n'est pas public — javap 1.21.1).
+- **Reste à faire** : regarder en jeu (`./gradlew runClient`) et régler les amplitudes au goût ; pas
+  de clé de config pour l'instant, tout est en constantes dans `Wave`.
 
 ## Backlog
 - **Choisir sa place** (question nistroy 2026-09-20) : faisable mais pas gratuit — vanilla attribue le

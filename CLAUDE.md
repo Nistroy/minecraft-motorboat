@@ -12,12 +12,14 @@ combustible de four, soute (réservoir + moteur + coffre 27), grande barque 6 pl
   (hérite `MotorboatEntity`, `isBigHull()` vrai) · `MotorboatItem` pose sur l'eau, une fabrique de coque
   par item · `TooltipItem` item à infobulle d'une ligne (moteurs, coques) · `MotorboatMenu` réservoir +
   moteur + coffre · `Motor` réserve de carburant (pur) · `MotorTier` palier de moteur (pur) · `Thrust`
-  maths de poussée (pur) · `SeatPlan` les six places de la grande barque (pur) · `MotorboatConfig` JSON.
+  maths de poussée (pur) · `SeatPlan` les six places de la grande barque (pur) · `Wave` assiette de
+  houle, purement visuelle (pur) · `MotorboatConfig` JSON.
 - `src/client/java/.../client/` — `MotorboatClient` enregistrement · `MotorboatRenderer` coque
-  vanilla (`BoatRenderer`) + bloc moteur, et repère commun `applyBoatPose` ·
+  vanilla (`BoatRenderer`) + bloc moteur, repère commun `applyBoatPose` et houle `applyWave` ·
   `BigMotorboatModel`/`BigMotorboatRenderer` grande coque, boîtes **traduites** de
   `tools/art/big_hull.bbmodel` (ne pas les retoucher à la main) · `MotorboatScreen` écran de la soute.
-- `src/test/java/` — JUnit sur les classes sans Minecraft (`Motor`, `Thrust`, `MotorboatConfig`, `SeatPlan`).
+- `src/test/java/` — JUnit sur les classes sans Minecraft (`Motor`, `Thrust`, `MotorboatConfig`,
+  `SeatPlan`, `Wave`).
 - `tools/generate_textures.py` — génère les PNG (stdlib seule), textures d'entité et texture de GUI.
   Les modèles d'entité sont **lus** dans `tools/art/*.bbmodel` (boîtes + `uv_offset`) : retoucher une
   maquette puis relancer le script suffit, la texture recolle. Seules les coordonnées des slots du menu
