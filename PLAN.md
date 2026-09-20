@@ -3,9 +3,8 @@
 Fichier de reprise : session qui repart lit **ça** puis `CLAUDE.md`. Mettre à jour à chaque étape verte.
 
 ## État au 2026-09-20
-- **`v0.5.0` : coque + moteurs, prête, pas déployée.** Le serveur tourne toujours en `v0.3.1` — ni
-  `server/mods/`, ni pack packwiz. Déploiement groupé voulu par nistroy (une seule mise à jour à faire
-  faire aux joueurs) : **en attente de son go**, gestes rappelés en §Étapes 8.
+- **Déploiement `0.3.1` → `0.6.0`** demandé par nistroy 2026-09-20 : coque + moteurs + houle en une
+  seule mise à jour pour les joueurs, comme voulu. Gestes en §Étapes 8.
 - `v0.4.0` (release seule) : coque modélisée, six places, sprites d'items faits main.
 - `v0.5.0` : hors-bord accrochés au tableau sur les deux barques (un modèle, un accrochage par coque),
   gros moteur avec son propre modèle, coque allongée 42 → 48 px pour que les six places gardent
@@ -15,8 +14,9 @@ Fichier de reprise : session qui repart lit **ça** puis `CLAUDE.md`. Mettre à 
   plafond de vitesse.
 - **Au déploiement, ne pas oublier** : `MODS.md` du dépôt serveur (version du mod) et prévenir les
   joueurs — client et serveur doivent avoir la même version, sinon les objets se mélangent (§Pièges).
-- **Houle** (demande nistroy 2026-09-20) : codée, testée, **pas encore vue en jeu** — branche
-  `feat/wave-motion`, non taguée. Amplitudes à valider à l'œil (§Houle).
+- **`v0.6.0` : houle** (demande nistroy 2026-09-20), PR #12 mergée, release + jar publiés. Déployée
+  serveur + pack avec la 0.4/0.5 : le saut du live est `0.3.1` → `0.6.0`. Détails §Houle ; amplitudes
+  encore à valider à l'œil en jeu.
 
 ## Demande (nistroy 2026-09-20)
 Coque de la grande barque jugée trop « radeau » (caisse : fond plat + 4 parois droites). **nistroy
