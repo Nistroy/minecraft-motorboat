@@ -19,9 +19,13 @@ combustible de four, soute (réservoir + moteur + coffre 27), grande barque 6 pl
   `tools/art/big_hull.bbmodel` (ne pas les retoucher à la main) · `MotorboatScreen` écran de la soute.
 - `src/test/java/` — JUnit sur les classes sans Minecraft (`Motor`, `Thrust`, `MotorboatConfig`, `SeatPlan`).
 - `tools/generate_textures.py` — génère les PNG (stdlib seule), textures d'entité et texture de GUI.
-  Boîtes du moteur et coordonnées des slots dupliquées ici : changer ce modèle-là ou la disposition du
-  menu = changer le script. La grande coque fait exception : boîtes et UV **lus** dans
-  `tools/art/big_hull.bbmodel`. Ne touche **pas** aux sprites d'items (faits main).
+  Les modèles d'entité sont **lus** dans `tools/art/*.bbmodel` (boîtes + `uv_offset`) : retoucher une
+  maquette puis relancer le script suffit, la texture recolle. Seules les coordonnées des slots du menu
+  sont dupliquées ici. Ne touche **pas** aux sprites d'items (faits main).
+- `tools/art/*.bbmodel` — maquettes Blockbench, **source des formes et des textures** :
+  `big_hull` (grande coque), `motor` / `big_motor` (les deux hors-bord). Texture embarquée dans le
+  fichier, donc il s'ouvre habillé. Le Java en est traduit (scripts de session, voir `PLAN.md`) :
+  ne pas retoucher les boîtes dans le Java, retoucher la maquette.
 - `tools/art/motorboat_items.png` — planche 80 × 16 de nistroy, source des 5 sprites d'items (ordre :
   `motor`, `big_motor`, `double_motor`, `motorboat`, `big_motorboat`). Hors `assets/` : tout PNG de
   `textures/item/` est cousu dans l'atlas des items. `tools/split_item_sheet.py` la redécoupe vers
@@ -50,8 +54,11 @@ combustible de four, soute (réservoir + moteur + coffre 27), grande barque 6 pl
   (simulée par le client du pilote) et le rendu.
 - Coque craftée **sans** moteur (`fer bateau fer`, forme fixe demandée par nistroy 2026-09-20) :
   sinon casser la barque rendrait coque + moteur, soit un moteur gratuit par cycle.
-- Rendu : BASIC = bloc moteur, BIG = même bloc × 1,35 autour du coin poupe/pont, DOUBLE = deux blocs
-  à ±3 unités en travers (`MotorboatRenderer.renderEngine`).
+- Rendu : BASIC = hors-bord de base, BIG = gros hors-bord (**son propre modèle**, pas une mise à
+  l'échelle), DOUBLE = deux hors-bord de base à ±4 unités en travers (`MotorboatRenderer.renderEngine`).
+  Le moteur pend **dehors**, accroché au tableau arrière : le modèle est dessiné autour de son point
+  d'accrochage et chaque coque passe le sien (`Mount`) — barque 2 places `(-16, -3)`, grande coque
+  `(-24, -8)`. Un seul modèle pour les deux barques.
 
 ## Conteneur et menu (relevés au javap, 1.21.1)
 - `MenuType.<init>` est privé, l'AW de `fabric-screen-handler-api-v1` le rouvre (Loom l'applique) mais

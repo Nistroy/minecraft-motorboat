@@ -87,8 +87,8 @@ avance, le moteur pousse, fume et fait des bulles. À sec, la barque redevient u
 
 Le carburant ne se consomme que quand on avance : une barque à l'arrêt ne brûle rien. Casser une
 barque rend son contenu — moteur compris — comme un bateau à coffre. La grande barque passe mal dans
-les rivières étroites et sous les ponts bas : elle occupe 2,25 blocs (sa coque en paraît un peu plus,
-comme le bateau vanilla, mais c'est bien 2,25 qui cognent).
+les rivières étroites et sous les ponts bas : elle occupe 2,25 blocs (sa coque en paraît
+nettement plus, comme le bateau vanilla, mais c'est bien 2,25 qui cognent).
 
 ## Installation
 

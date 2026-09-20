@@ -25,18 +25,25 @@ public class BigMotorboatRenderer extends EntityRenderer<Boat> {
 
     private static final ResourceLocation HULL_TEXTURE = Motorboat.id("textures/entity/big_motorboat.png");
 
-    /** Recul du bloc moteur sur la grande coque, en unités de modèle (1/16 de bloc). */
-    private static final float ENGINE_OFFSET = -2.0F;
+    /**
+     * Accrochage du moteur sur la grande coque : arête haute du tableau arrière, face extérieure —
+     * x = −24 (bordé), y = −8 (dessus de la banquette de poupe, {@code y_bb} 9). Le hors-bord pend
+     * donc derrière le tableau, dans le dos du pilote, barre franche vers l'avant.
+     */
+    private static final MotorboatRenderer.Mount MOUNT = new MotorboatRenderer.Mount(-24.0F, -8.0F);
 
     private final BigMotorboatModel model;
 
     private final ModelPart engine;
+
+    private final ModelPart bigEngine;
 
     public BigMotorboatRenderer(EntityRendererProvider.Context context) {
         super(context);
         this.shadowRadius = 1.25F;
         this.model = new BigMotorboatModel(context.bakeLayer(HULL_LAYER));
         this.engine = context.bakeLayer(MotorboatRenderer.ENGINE_LAYER);
+        this.bigEngine = context.bakeLayer(MotorboatRenderer.BIG_ENGINE_LAYER);
     }
 
     @Override
@@ -49,12 +56,8 @@ public class BigMotorboatRenderer extends EntityRenderer<Boat> {
         if (!boat.isUnderWater()) {
             model.waterPatch().render(pose, buffers.getBuffer(RenderType.waterMask()), light, OverlayTexture.NO_OVERLAY);
         }
-        // Moteur calé contre le tableau arrière, pile devant la banquette du pilote : la boîte du
-        // moteur est dessinée pour la barque 2 places, la grande coque la recule de 2 px.
-        pose.pushPose();
-        pose.translate(ENGINE_OFFSET / 16.0F, 0.0F, 0.0F);
-        MotorboatRenderer.renderEngine(engine, pose, buffers, light, MotorboatRenderer.motorOf(boat));
-        pose.popPose();
+        MotorboatRenderer.renderEngine(
+                engine, bigEngine, MOUNT, pose, buffers, light, MotorboatRenderer.motorOf(boat));
         pose.popPose();
         super.render(boat, yaw, partialTicks, pose, buffers, light);
     }

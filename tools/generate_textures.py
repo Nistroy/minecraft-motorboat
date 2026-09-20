@@ -3,11 +3,11 @@
 
 Les régions de la texture d'entité sont calculées à partir des boîtes du modèle : même dépliage UV
 que Minecraft (haut, bas, droite, avant, gauche, arrière), donc les nombres du moteur ici doivent
-rester ceux de MotorboatRenderer.createEngineLayer().
+rester ceux du menu.
 
-La grande coque, elle, n'est plus décrite ici : ses boîtes et ses UV sont lues dans
-tools/art/big_hull.bbmodel, donc la texture suit le modèle même après retouche dans Blockbench.
-Si la coque est un jour peinte à la main, supprimer big_hull_texture() — sinon il l'écrase.
+Les modèles d'entité ne sont plus décrits ici : coque et moteurs sont lus dans tools/art/*.bbmodel,
+donc les textures suivent les modèles même après retouche dans Blockbench. Peints à la main un jour,
+supprimer la fonction correspondante — sinon elle les écrase.
 
 Usage : python3 tools/generate_textures.py
 """
@@ -157,39 +157,13 @@ def slot(image, x, y):
     image.pixels[y + 16][x - 1] = SLOT
 
 
-def engine_texture():
-    image = Image(32, 32)
-    # Bloc moteur : boîte 4 × 7 × 5 à texOffs(0, 0).
-    body = box_faces(0, 0, 4, 7, 5)
-    for name, (x, y, w, h) in body.items():
-        image.rect(x, y, w, h, IRON_LIGHT if name == "top" else IRON)
-        image.rect(x, y, w, 1, IRON_LIGHT)  # arête du haut
-        image.rect(x, y + h - 1, w, 1, IRON_DARK)  # arête du bas
-    for name in ("right", "front", "left", "back"):
-        x, y, w, h = body[name]
-        image.rect(x, y + 3, w, 1, COPPER)  # bandeau de cuivre
-        image.rect(x, y + 4, w, 1, COPPER_DARK)
-        image.rect(x, y + h - 2, 1, 1, IRON_DARK)  # boulons
-        image.rect(x + w - 1, y + h - 2, 1, 1, IRON_DARK)
-    x, y, w, h = body["top"]
-    image.rect(x + 1, y + 1, w - 2, h - 2, IRON)  # plaque du dessus
-    image.rect(x + 1, y + 2, 2, 2, COPPER)  # volant moteur
+ART = pathlib.Path(__file__).resolve().parent / "art"
 
-    # Échappement : boîte 2 × 4 × 2 à texOffs(0, 13).
-    pipe = box_faces(0, 13, 2, 4, 2)
-    for name, (x, y, w, h) in pipe.items():
-        image.rect(x, y, w, h, PIPE)
-    x, y, w, h = pipe["top"]
-    image.rect(x, y, w, h, HOLE)
-    image.save(ASSETS / "entity/motor.png")
+HULL_MODEL = ART / "big_hull.bbmodel"
 
-
-# Boîtes de BigMotorboatModel.createBodyModel() : (texOffs u, v, dx, dy, dz).
 WOOD_LIGHT = (162, 128, 84, 255)
 
-HULL_MODEL = pathlib.Path(__file__).resolve().parent / "art/big_hull.bbmodel"
-
-# Teintes (base, clair, sombre) par famille de pièce, d'après le préfixe du nom dans le .bbmodel.
+# Teintes (base, clair, sombre) par famille de pièce de coque, d'après le préfixe du nom.
 HULL_TONES = {
     "fond": ((120, 92, 58, 255), (139, 107, 69, 255), (92, 70, 44, 255)),
     "pont": ((132, 102, 65, 255), (154, 120, 78, 255), (101, 77, 48, 255)),
@@ -200,6 +174,51 @@ HULL_TONES = {
     "banquette": ((172, 137, 91, 255), (196, 160, 110, 255), (128, 100, 64, 255)),
     "banc": ((158, 124, 81, 255), (182, 147, 99, 255), (118, 91, 58, 255)),
 }
+
+# Teintes (base, clair, sombre) par famille de pièce de moteur, d'après le préfixe du nom.
+ENGINE_TONES = {
+    "capot": (IRON, IRON_LIGHT, IRON_DARK),
+    "chape": (IRON_DARK, IRON, (40, 42, 46, 255)),
+    "echappement": (PIPE, (78, 78, 84, 255), HOLE),
+    "arbre": (IRON_DARK, IRON, (40, 42, 46, 255)),
+    "embase": (IRON, IRON_LIGHT, IRON_DARK),
+    "helice": (IRON_LIGHT, (140, 144, 154, 255), IRON),
+    "barre": (IRON_DARK, IRON, (40, 42, 46, 255)),
+}
+
+
+def metal(image, x, y, w, h, tone, band=False):
+    """Remplit une face de métal : arête claire en haut, sombre en bas, boulons aux coins bas.
+
+    {@code band} ajoute le bandeau de cuivre du capot, la seule touche de couleur du moteur."""
+    base, light, dark = tone
+    image.rect(x, y, w, h, base)
+    image.rect(x, y, w, 1, light)
+    image.rect(x, y + h - 1, w, 1, dark)
+    if band and h >= 5 and w >= 3:
+        image.rect(x, y + h // 2, w, 1, COPPER)
+        image.rect(x, y + h // 2 + 1, w, 1, COPPER_DARK)
+    if w >= 3 and h >= 3:
+        image.rect(x, y + h - 2, 1, 1, dark)
+        image.rect(x + w - 1, y + h - 2, 1, 1, dark)
+
+
+def engine_textures():
+    """Peint les deux hors-bord d'après tools/art/{motor,big_motor}.bbmodel.
+
+    Même montage que la coque : les boîtes et les UV viennent du modèle, jamais d'une table
+    recopiée ici. Peints à la main un jour → supprimer cette fonction, sinon elle écrase."""
+    for model in ("motor", "big_motor"):
+        source = json.loads((ART / f"{model}.bbmodel").read_text(encoding="utf-8"))
+        image = Image(source["resolution"]["width"], source["resolution"]["height"])
+        for element in source["elements"]:
+            u, v = element["uv_offset"]
+            dx, dy, dz = (math.ceil(element["to"][i] - element["from"][i]) for i in range(3))
+            family = element["name"].split("_")[0]
+            for name, (x, y, w, h) in box_faces(u, v, dx, dy, dz).items():
+                metal(image, x, y, w, h, ENGINE_TONES[family],
+                      band=family == "capot" and name in ("right", "front", "left", "back"))
+        image.save(ASSETS / f"entity/{model}.png")
 
 
 def planks(image, x, y, w, h, tone=None):
@@ -241,6 +260,6 @@ def big_hull_texture():
 
 if __name__ == "__main__":
     gui_texture()
-    engine_texture()
+    engine_textures()
     big_hull_texture()
     print("textures générées dans", ASSETS)
