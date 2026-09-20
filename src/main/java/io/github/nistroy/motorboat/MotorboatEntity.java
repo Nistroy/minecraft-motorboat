@@ -37,6 +37,9 @@ public class MotorboatEntity extends Boat {
     /** Un « pot-pot » toutes les 5 ticks : assez pour s'entendre tourner, assez peu pour ne pas saouler. */
     private static final int SOUND_INTERVAL_TICKS = 5;
 
+    /** Vitesse² au-delà de laquelle le moteur se voit et s'entend (~1,3 bloc/s) : à quai, il se tait. */
+    private static final double EFFECTS_SPEED_SQR = 0.004;
+
     /** Saisie « en avant » du pilote. Remplie côté client seulement (voir {@link #setInput}). */
     private boolean throttle;
 
@@ -81,7 +84,7 @@ public class MotorboatEntity extends Boat {
             if (throttle && Motor.running(fuel()) && isControlledByLocalInstance()) {
                 pushForward();
             }
-            if (Motor.running(fuel()) && isVehicle()) {
+            if (Motor.running(fuel()) && isVehicle() && getDeltaMovement().horizontalDistanceSqr() > EFFECTS_SPEED_SQR) {
                 engineEffects();
             }
         } else {
