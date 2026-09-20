@@ -12,14 +12,16 @@ combustible de four, soute (réservoir + moteur + coffre 27), grande barque 6 pl
   (hérite `MotorboatEntity`, `isBigHull()` vrai) · `MotorboatItem` pose sur l'eau, une fabrique de coque
   par item · `TooltipItem` item à infobulle d'une ligne (moteurs, coques) · `MotorboatMenu` réservoir +
   moteur + coffre · `Motor` réserve de carburant (pur) · `MotorTier` palier de moteur (pur) · `Thrust`
-  maths de poussée (pur) · `MotorboatConfig` JSON.
+  maths de poussée (pur) · `SeatPlan` les six places de la grande barque (pur) · `MotorboatConfig` JSON.
 - `src/client/java/.../client/` — `MotorboatClient` enregistrement · `MotorboatRenderer` coque
   vanilla (`BoatRenderer`) + bloc moteur, et repère commun `applyBoatPose` ·
-  `BigMotorboatModel`/`BigMotorboatRenderer` grande coque maison · `MotorboatScreen` écran de la soute.
-- `src/test/java/` — JUnit sur les classes sans Minecraft (`Motor`, `Thrust`, `MotorboatConfig`).
+  `BigMotorboatModel`/`BigMotorboatRenderer` grande coque, boîtes **traduites** de
+  `tools/art/big_hull.bbmodel` (ne pas les retoucher à la main) · `MotorboatScreen` écran de la soute.
+- `src/test/java/` — JUnit sur les classes sans Minecraft (`Motor`, `Thrust`, `MotorboatConfig`, `SeatPlan`).
 - `tools/generate_textures.py` — génère les PNG (stdlib seule), textures d'entité et texture de GUI.
-  Boîtes des modèles et coordonnées des slots dupliquées ici : changer le modèle ou la disposition du
-  menu = changer le script. Ne touche **pas** aux sprites d'items (faits main).
+  Boîtes du moteur et coordonnées des slots dupliquées ici : changer ce modèle-là ou la disposition du
+  menu = changer le script. La grande coque fait exception : boîtes et UV **lus** dans
+  `tools/art/big_hull.bbmodel`. Ne touche **pas** aux sprites d'items (faits main).
 - `tools/art/motorboat_items.png` — planche 80 × 16 de nistroy, source des 5 sprites d'items (ordre :
   `motor`, `big_motor`, `double_motor`, `motorboat`, `big_motorboat`). Hors `assets/` : tout PNG de
   `textures/item/` est cousu dans l'atlas des items. `tools/split_item_sheet.py` la redécoupe vers

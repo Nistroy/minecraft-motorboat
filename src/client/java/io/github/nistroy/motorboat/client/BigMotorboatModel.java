@@ -11,11 +11,17 @@ import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.world.entity.vehicle.Boat;
 
 /**
- * Coque de la grande barque : caisse ouverte de 36 × 28 px (2,25 × 1,75 bloc), proue en +X.
+ * Coque de la grande barque : barque vanilla agrandie, 42 × 28 px (2,625 × 1,75 bloc), proue en +X.
  *
  * <p>Repère du modèle : après les transformations du rendu de bateau, +X pointe vers la proue et
  * **-Y vers le haut** ({@code scale(-1, -1, 1)}), d'où des parois de {@code y = -6} à {@code y = 0}.
- * Les mêmes nombres sont repris dans {@code tools/generate_textures.py} : changer l'un = changer l'autre.
+ *
+ * <p>Les boîtes ne sont pas écrites à la main : elles sont traduites de {@code tools/art/big_hull.bbmodel}
+ * (maquette Blockbench, source de la forme **et** de la texture). Conversion : x et z inchangés,
+ * {@code y_mod = 1 - y_bb}, et **rotation Y de même signe** : le {@code scale(-1, -1, 1)} est une
+ * rotation de 180° autour de Z (déterminant +1), pas un miroir, il ne retourne pas le sens des
+ * rotations (vérifié en jeu le 2026-09-20 — l'inverser ouvrait l'étrave en ailes). Retoucher la maquette → retraduire ici et relancer
+ * {@code tools/generate_textures.py} ; voir {@code PLAN.md}.
  */
 public class BigMotorboatModel extends ListModel<Boat> {
     public static final int TEXTURE_WIDTH = 256;
@@ -40,30 +46,143 @@ public class BigMotorboatModel extends ListModel<Boat> {
         PartDefinition root = mesh.getRoot();
         PartDefinition hull = root.addOrReplaceChild(HULL, CubeListBuilder.create(), PartPose.ZERO);
         hull.addOrReplaceChild(
-                "bottom",
-                CubeListBuilder.create().texOffs(0, 0).addBox(-18.0F, 0.0F, -14.0F, 36.0F, 1.0F, 28.0F),
+                "fond",
+                CubeListBuilder.create()
+                        .texOffs(0, 0)
+                        .addBox(-21F, 0F, -13F, 32F, 1F, 26F),
                 PartPose.ZERO);
         hull.addOrReplaceChild(
-                "port",
-                CubeListBuilder.create().texOffs(0, 32).addBox(-18.0F, -6.0F, 13.0F, 36.0F, 6.0F, 1.0F),
+                "fond_etrave_1",
+                CubeListBuilder.create()
+                        .texOffs(116, 0)
+                        .addBox(11F, 0F, -11.5F, 2F, 1F, 23F),
                 PartPose.ZERO);
         hull.addOrReplaceChild(
-                "starboard",
-                CubeListBuilder.create().texOffs(0, 40).addBox(-18.0F, -6.0F, -14.0F, 36.0F, 6.0F, 1.0F),
+                "fond_etrave_2",
+                CubeListBuilder.create()
+                        .texOffs(166, 0)
+                        .addBox(13F, 0F, -9F, 2F, 1F, 18F),
                 PartPose.ZERO);
         hull.addOrReplaceChild(
-                "bow",
-                CubeListBuilder.create().texOffs(0, 48).addBox(17.0F, -6.0F, -13.0F, 1.0F, 6.0F, 26.0F),
+                "fond_etrave_3",
+                CubeListBuilder.create()
+                        .texOffs(206, 0)
+                        .addBox(15F, 0F, -6.5F, 2F, 1F, 13F),
                 PartPose.ZERO);
         hull.addOrReplaceChild(
-                "stern",
-                CubeListBuilder.create().texOffs(64, 48).addBox(-18.0F, -6.0F, -13.0F, 1.0F, 6.0F, 26.0F),
+                "fond_etrave_4",
+                CubeListBuilder.create()
+                        .texOffs(236, 0)
+                        .addBox(17F, 0F, -4F, 2F, 1F, 8F),
                 PartPose.ZERO);
+        hull.addOrReplaceChild(
+                "fond_etrave_5",
+                CubeListBuilder.create()
+                        .texOffs(0, 27)
+                        .addBox(19F, 0F, -1.5F, 1.5F, 1F, 3F),
+                PartPose.ZERO);
+        hull.addOrReplaceChild(
+                "borde_bd",
+                CubeListBuilder.create()
+                        .texOffs(10, 27)
+                        .addBox(-21F, -6F, 12F, 32F, 6F, 2F),
+                PartPose.ZERO);
+        hull.addOrReplaceChild(
+                "borde_td",
+                CubeListBuilder.create()
+                        .texOffs(78, 27)
+                        .addBox(-21F, -6F, -14F, 32F, 6F, 2F),
+                PartPose.ZERO);
+        hull.addOrReplaceChild(
+                "tableau",
+                CubeListBuilder.create()
+                        .texOffs(146, 27)
+                        .addBox(-21F, -6F, -12F, 2F, 6F, 24F),
+                PartPose.ZERO);
+        hull.addOrReplaceChild(
+                "liston_bd",
+                CubeListBuilder.create()
+                        .texOffs(0, 57)
+                        .addBox(-21F, -7F, 11.5F, 32F, 1F, 2.5F),
+                PartPose.ZERO);
+        hull.addOrReplaceChild(
+                "liston_td",
+                CubeListBuilder.create()
+                        .texOffs(70, 57)
+                        .addBox(-21F, -7F, -14F, 32F, 1F, 2.5F),
+                PartPose.ZERO);
+        hull.addOrReplaceChild(
+                "banquette_poupe",
+                CubeListBuilder.create()
+                        .texOffs(140, 57)
+                        .addBox(-21F, -8F, -11.5F, 4F, 2F, 23F),
+                PartPose.ZERO);
+        hull.addOrReplaceChild(
+                "pont_avant_1",
+                CubeListBuilder.create()
+                        .texOffs(194, 57)
+                        .addBox(15.5F, -7F, -6F, 1.5F, 1F, 12F),
+                PartPose.ZERO);
+        hull.addOrReplaceChild(
+                "pont_avant_2",
+                CubeListBuilder.create()
+                        .texOffs(222, 57)
+                        .addBox(17F, -7F, -3.5F, 2F, 1F, 7F),
+                PartPose.ZERO);
+        hull.addOrReplaceChild(
+                "pont_avant_3",
+                CubeListBuilder.create()
+                        .texOffs(240, 57)
+                        .addBox(19F, -7F, -2F, 1.5F, 1F, 4F),
+                PartPose.ZERO);
+        hull.addOrReplaceChild(
+                "etrave",
+                CubeListBuilder.create()
+                        .texOffs(0, 82)
+                        .addBox(18.5F, -9F, -2.75F, 2.5F, 9F, 5.5F),
+                PartPose.ZERO);
+        hull.addOrReplaceChild(
+                "banc_milieu_ar",
+                CubeListBuilder.create()
+                        .texOffs(18, 82)
+                        .addBox(-10F, -2F, -10F, 4F, 2F, 20F),
+                PartPose.ZERO);
+        hull.addOrReplaceChild(
+                "banc_milieu_av",
+                CubeListBuilder.create()
+                        .texOffs(66, 82)
+                        .addBox(-1F, -2F, -10F, 4F, 2F, 20F),
+                PartPose.ZERO);
+        hull.addOrReplaceChild(
+                "banc_etrave",
+                CubeListBuilder.create()
+                        .texOffs(114, 82)
+                        .addBox(9F, -2F, -5F, 4F, 2F, 10F),
+                PartPose.ZERO);
+        hull.addOrReplaceChild(
+                "proue_bd",
+                CubeListBuilder.create()
+                        .texOffs(142, 82)
+                        .addBox(0F, -7F, -1F, 14.6F, 7F, 2F)
+                        .texOffs(176, 82)
+                        .addBox(0F, -8F, -1.5F, 14.6F, 1F, 2.5F),
+                PartPose.offsetAndRotation(11F, 0F, 13F,
+                        0.0F, 0.9068F, 0.0F));
+        hull.addOrReplaceChild(
+                "proue_td",
+                CubeListBuilder.create()
+                        .texOffs(212, 82)
+                        .addBox(0F, -7F, -1F, 14.6F, 7F, 2F)
+                        .texOffs(0, 104)
+                        .addBox(0F, -8F, -1F, 14.6F, 1F, 2.5F),
+                PartPose.offsetAndRotation(11F, 0F, -13F,
+                        0.0F, -0.9068F, 0.0F));
         // Plan horizontal masquant l'eau à l'intérieur de la coque (même astuce que le bateau vanilla :
-        // boîte plate en XY, couchée par une rotation d'un quart de tour).
+        // boîte plate en XY, couchée par une rotation d'un quart de tour). Rendu en masque d'eau : ses
+        // UV ne sont jamais échantillonnées, seules ses dimensions comptent (intérieur x -19..11, z ±12).
         root.addOrReplaceChild(
                 WATER_PATCH,
-                CubeListBuilder.create().texOffs(128, 0).addBox(-17.0F, -13.0F, 0.0F, 34.0F, 26.0F, 0.0F),
+                CubeListBuilder.create().texOffs(0, 0).addBox(-19.0F, -12.0F, 0.0F, 30.0F, 24.0F, 0.0F),
                 PartPose.offsetAndRotation(0.0F, -0.5F, 0.0F, ((float) Math.PI / 2F), 0.0F, 0.0F));
         return LayerDefinition.create(mesh, TEXTURE_WIDTH, TEXTURE_HEIGHT);
     }

@@ -15,18 +15,80 @@ modélise dans Blockbench et refait les sprites d'items ; l'agent recâble, ne c
 
 - Sprites d'items : **livrés et en place** 2026-09-20 (branche `feat/item-sprites`), planche
   `tools/art/motorboat_items.png`.
-- Reste attendu de nistroy : `.bbmodel` (projet, pas un export) + PNG de texture de coque
+- Coque : **maquette de départ fournie par l'agent** à la demande de nistroy (2026-09-20),
+  `tools/art/big_hull.bbmodel` sur la branche `art/coque` — barque vanilla agrandie, à retoucher
+  dans Blockbench (pas d'art fait par l'agent : formes seulement, aucune texture).
+- Reste attendu de nistroy : le `.bbmodel` retouché (projet, pas un export) + PNG de texture de coque
   (`256 × 128` aujourd'hui). Transfert : branche `art/coque` (upload web GitHub) ou Discord.
 - Pas de tag tant que la coque n'est pas là : sprites + coque sortent ensemble en `0.4.0`
   (choix nistroy 2026-09-20).
 
 ## Contraintes données à nistroy (ne pas les contredire)
 - 1 unité Blockbench = 1 px Minecraft = 1/16 bloc ; modéliser **Y vers le haut**, l'agent gère l'inversion.
-- Encombrement ≤ 36 × 36 unités au sol (hitbox `sized(2.25F, 0.5625F)`, **carrée en X/Z**) ; hauteur libre.
-- Coque actuelle : 36 long × 28 large × 7 haut, fond 1 d'épaisseur ; texture `256 × 128`.
+- Hitbox `sized(2.25F, 0.5625F)` (36 px, **carrée en X/Z**), **inchangée** : le modèle a le droit de
+  déborder, vanilla le fait déjà (coque de 28 px dans une hitbox de 22, relevé au javap 1.21.1).
+  Débord actuel 42 px = +17 %, vanilla +27 %. Largeur : rester ≤ 28 px, sinon on cogne les berges.
+- Coque v0.3 (celle qu'on remplace) : 36 long × 28 large × 7 haut, fond 1 d'épaisseur ; texture `256 × 128`.
 - Plan d'eau (masque) et six sièges : **en code**, nistroy ne les modélise pas. Bancs éventuels → aligner
   les sièges dessus.
 - Bloc moteur refaisable aussi : 4×7×5 + échappement 2×4×2, texture `32 × 32`.
+- Repère de la maquette : quille posée sur `y = 0`, **+X = proue**, Z en travers. Ne pas déplacer la
+  coque en bloc, les chiffres de recâblage en dépendent.
+
+## Maquette `tools/art/big_hull.bbmodel` (agent, 2026-09-20)
+23 cubes, `box_uv` dans `256 × 128` (empreintes packées sans recouvrement, vérifié), **texture
+embarquée en base64** → le fichier s'ouvre déjà habillé, rien à importer ; `relative_path` pointe
+`src/main/resources/assets/motorboat/textures/entity/big_motorboat.png` pour le réenregistrement.
+Encombrement **42 × 28 × 10** (x ±21, z ±14, y 0→10), rotations comprises. Allongée de 36 à 42 à la
+demande de nistroy (2026-09-20) pour loger le poste de barre.
+- Groupe `coque` : fond (+ 5 marches d'étrave), bordés 2 d'épaisseur × 6 de haut, tableau arrière,
+  listons (débord 0,5 vers l'intérieur), `banquette_poupe`, pont avant, étrave, 3 bancs.
+- `banquette_poupe` (x −21→−17, y 7→9, z ±11,5) : liston de poupe élargi et épaissi, **le pilote
+  s'assoit dessus** (nistroy 2026-09-20, « comme quelqu'un qui se pose dessus pour manœuvrer »).
+  Dépasse d'1 px les listons de bord, d'où une banquette qui se lit.
+- Groupes `proue_bd`/`proue_td` : bordé + liston inclinés, pivot `(11, 1, ±13)`, rotation Y `±51,953°`,
+  longueur 14,6 → pointe à `(20, ±1,5)`. **Une rotation par groupe** (format `modded_entity` : les cubes
+  ne tournent pas seuls) → conversion directe en `PartPose.offsetAndRotation`.
+- Pièces de fond/pont de l'étrave taillées à la largeur de leur **bord arrière** : le débord (≤ 3,0)
+  reste noyé dans l'épaisseur du bordé incliné (2 / cos 51,953° = 3,25 mesurés en Z) donc invisible ;
+  les tailler au bord avant laisserait un trou.
+- Texture : `tools/generate_textures.py` → `big_hull_texture()` **lit le `.bbmodel`** (boîtes + `uv_offset`),
+  une teinte par famille de nom (`fond`, `pont`, `borde`, `tableau`, `etrave`, `liston`, `banquette`,
+  `banc`). Retoucher la forme dans Blockbench puis relancer le script = texture à jour. Peinte à la
+  main un jour → supprimer `big_hull_texture()`, sinon elle écrase (piège déjà vu sur les sprites).
+  Nom de pièce inconnu du tableau `HULL_TONES` = `KeyError` : ajouter la famille avant de relancer.
+
+## Plan de sièges de la maquette (à recâbler, `BigMotorboatEntity`)
+Six places, **pilote assis sur la banquette de poupe** (nistroy 2026-09-20).
+`Boat.getControllingPassenger` = **premier passager** (javap 1.21.1) → le siège 0 doit être la barre,
+le premier monté pilote.
+| siège | appui | x maquette (px) | travers z (px) | dessus (y_bb) | entité : `along` / `across` / hauteur (blocs) |
+|---|---|---|---|---|---|
+| 0 (barre) | `banquette_poupe` | −19 | 0 | 9 | −1,1875 / 0 / **0,6875** |
+| 1-2 | `banc_milieu_ar` | −8 | ±6,4 | 3 | −0,5 / ∓0,4 / 0,3125 |
+| 3-4 | `banc_milieu_av` | +1 | ±6,4 | 3 | +0,0625 / ∓0,4 / 0,3125 |
+| 5 | `banc_etrave` | +11 | 0 | 3 | +0,6875 / 0 / 0,3125 |
+- `ROW_OFFSETS`/`SEAT_OFFSET` ne suffisent plus (rangs inégaux, places centrales, **hauteurs
+  différentes**) → table de 6 triplets `(along, across, hauteur)`.
+- `along` = x maquette / 16, `across` = z maquette / 16 ; hauteur = `0,375 + (dessus − 1) / 16 − 0,1875`
+  (0,375 = translation du rendu, 0,1875 = enfoncement de l'assise, celui de vanilla).
+- Attache = `new Vec3(across, hauteur, along).yRot(-yRot)` : **Z = proue côté entité**, donc
+  `along` vient du **x** de la maquette.
+- **Moteur reculé pour la grande coque seulement** : `translate(-2/16, 0, 0)` dans
+  `BigMotorboatRenderer` avant `renderEngine` (boîte `x −15..−11` → `−17..−13`), calé pile devant la
+  banquette. Ne pas toucher `MotorboatRenderer`, la barque 2 places garde son moteur où il est.
+- Bancs resserrés vers la poupe (nistroy 2026-09-20 : trop de plancher vide entre le pilote et le
+  premier banc) : rangs espacés de 9 à 11 px, plus que 3 px entre le moteur et le banc arrière.
+- Plan d'eau : à redimensionner en code (intérieur ≈ 30 × 24) ; il est rendu en `RenderType.waterMask`,
+  donc ses UV ne sont pas échantillonnées — pas de zone à réserver dans l'atlas.
+
+## Conversion maquette → modèle du mod (à faire au recâblage)
+- `x_mod = x_bb`, `z_mod = z_bb`, **`y_mod = 1 − y_bb`** (le rendu monte en −Y).
+- **`yRot_mod = +rot_Y_bb`**, même signe (vérifié en jeu 2026-09-20). `scale(-1, -1, 1)` a un
+  déterminant de +1 : c'est une rotation de 180° autour de Z, **pas un miroir**, elle ne retourne
+  pas le sens des rotations. L'avoir inversé ouvrait les deux panneaux d'étrave en ailes au lieu de
+  les fermer en pointe.
+- `addBox(x, y, z, w, h, d)` prend le coin **minimal** : `y_mod` du coin = `1 − y_bb_max`.
 
 ## Repères techniques (relevés au javap 1.21.1, ne pas re-deviner)
 - Repère après `MotorboatRenderer.applyBoatPose` : **+X = proue**, **−Y = haut** (`scale(-1, -1, 1)`),
@@ -43,13 +105,20 @@ modélise dans Blockbench et refait les sprites d'items ; l'agent recâble, ne c
       (pixels identiques à la planche, vérifié) ; planche gardée hors de `assets/`.
 - [x] 4. Fonctions de sprites d'items retirées de `tools/generate_textures.py` (il les écrasait),
       en-tête + carte de `CLAUDE.md` à jour.
-- [ ] 2. `.bbmodel` → `BigMotorboatModel.createBodyModel()` : cubes `from`/`to`/`origin`/`rotation`/`uv`,
-      attention `inflate` et pivots ; convertir Y-up Blockbench vers le repère du mod.
-- [ ] 3a. Texture de coque en place (`assets/motorboat/textures/entity/`) ; ajuster
-      `TEXTURE_WIDTH`/`TEXTURE_HEIGHT` si nistroy a changé la taille, et retirer `big_hull_texture()`
-      de `tools/generate_textures.py`.
-- [ ] 5. Sièges et `sized()` réajustés si les proportions changent.
-- [ ] 6. `./gradlew build` vert **et** `./gradlew runClient` (le rendu ne se vérifie pas autrement).
+- [x] 2. `.bbmodel` → `BigMotorboatModel.createBodyModel()` : 21 pièces traduites par script
+      (scratchpad, `bbmodel_to_java.py`), plan d'eau ramené à 30 × 24. Piège rencontré : les cubes
+      hors groupe ont `PartPose.ZERO` alors que la quille est en `y_mod = 1` → poser `py = 1` dans la
+      conversion, sinon tout descend d'1 px.
+- [x] 3a. Texture de coque générée depuis le `.bbmodel` (`big_hull_texture()` réécrit, table
+      `BIG_HULL_BOXES` supprimée), `256 × 128` inchangé. À refaire à la main plus tard si nistroy veut.
+- [x] 5. Sièges : classe pure `SeatPlan` (6 places, testée : symétrie, barre la plus à l'arrière et
+      la plus haute, index écrêté), `BigMotorboatEntity` y délègue ; moteur reculé de 2 px dans
+      `BigMotorboatRenderer` (`ENGINE_OFFSET`), ombre portée 1,25. `sized()` inchangé.
+- [ ] 6. `./gradlew build` vert (fait, tests compris) **et** `./gradlew runClient`.
+      1ère passe 2026-09-20 : physique OK, texture OK, aucune texture manquante au log ; **étrave en
+      ailes** → signe de rotation corrigé (§Conversion), à revérifier. Reste à regarder : assise du
+      pilote sur la banquette, moteur devant lui (il faut **poser un moteur dans la soute**, sans
+      moteur rien n'est dessiné, c'est voulu), pas de trou à l'étrave.
 - [ ] 7. Version `0.4.0`, PR, merge, tag `v0.4.0` → release (workflow : tag = `version` de
       `gradle.properties`, sinon il échoue).
 - [ ] 8. Déploiement, **les deux ensemble** : `server/mods/` du dépôt serveur + `pack/mods/motorboat.pw.toml`
@@ -64,6 +133,20 @@ modélise dans Blockbench et refait les sprites d'items ; l'agent recâble, ne c
 - RCON sur `runServer` : sans joueur, les entités ne tiquent pas dans les chunks de spawn →
   `forceload add 0 0` avant toute mesure, sinon `Fuel` reste à 0 et on croit à un bug.
 - Dépôt `minecraft-server` : checkout live, **jamais** changer sa branche → worktree + `merge --ff-only`.
+
+## Backlog (sorti du périmètre 0.4.0)
+- **Choisir sa place** (question nistroy 2026-09-20) : faisable mais pas gratuit — vanilla attribue le
+  siège par ordre de montée (`getPassengers().indexOf`). Il faut un plan de sièges stocké et
+  **synchronisé** (le client du pilote calcule les attaches), le choix du siège libre le plus proche
+  dans `interact`, et redéfinir `getControllingPassenger` pour que ce soit l'occupant de la barre qui
+  pilote. À part, après la coque.
+- **Modèles de moteur** (avis rendu à nistroy 2026-09-20, à faire après la coque) : garder le double
+  tel quel (deux blocs à ±3, 1 px d'écart — deux moteurs, c'est ce qu'il faut lire) ; **refaire le
+  gros**, qui n'est que le bloc de base ×1,35 : 4 px → 5,4, les texels tombent hors grille et ça rend
+  flou. Modèle dédié en tailles entières. Refaire aussi le moteur de base (capot, arbre, hélice, barre
+  franche vers le pilote) : il est désormais pile devant lui. **Le modèle de base doit rester petit**,
+  c'est le seul admis sur la barque 2 places (`MotorTier.fitsHull`) ; gros et double ne s'affichent que
+  sur la grande coque. Même montage que la coque : `.bbmodel` dans `tools/art/`, texture générée.
 
 ## Reste en attente (hors art)
 - Supprimer la branche `test/motorboat-0-3-0` (dépôt serveur) et la pré-version `test-0.3.0-rc1` quand

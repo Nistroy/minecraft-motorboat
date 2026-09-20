@@ -2,12 +2,18 @@
 """Génère les textures du mod (PNG RGBA, sans dépendance externe).
 
 Les régions de la texture d'entité sont calculées à partir des boîtes du modèle : même dépliage UV
-que Minecraft (haut, bas, droite, avant, gauche, arrière), donc les nombres ici doivent rester ceux
-de MotorboatRenderer.createEngineLayer().
+que Minecraft (haut, bas, droite, avant, gauche, arrière), donc les nombres du moteur ici doivent
+rester ceux de MotorboatRenderer.createEngineLayer().
+
+La grande coque, elle, n'est plus décrite ici : ses boîtes et ses UV sont lues dans
+tools/art/big_hull.bbmodel, donc la texture suit le modèle même après retouche dans Blockbench.
+Si la coque est un jour peinte à la main, supprimer big_hull_texture() — sinon il l'écrase.
 
 Usage : python3 tools/generate_textures.py
 """
 
+import json
+import math
 import pathlib
 import struct
 import zlib
@@ -179,36 +185,57 @@ def engine_texture():
 
 
 # Boîtes de BigMotorboatModel.createBodyModel() : (texOffs u, v, dx, dy, dz).
-BIG_HULL_BOXES = {
-    "bottom": (0, 0, 36, 1, 28),
-    "port": (0, 32, 36, 6, 1),
-    "starboard": (0, 40, 36, 6, 1),
-    "bow": (0, 48, 1, 6, 26),
-    "stern": (64, 48, 1, 6, 26),
-}
-
 WOOD_LIGHT = (162, 128, 84, 255)
 
+HULL_MODEL = pathlib.Path(__file__).resolve().parent / "art/big_hull.bbmodel"
 
-def planks(image, x, y, w, h):
-    """Remplit une face de planches : veinures claires, joints sombres tous les 4 px."""
-    image.rect(x, y, w, h, WOOD)
+# Teintes (base, clair, sombre) par famille de pièce, d'après le préfixe du nom dans le .bbmodel.
+HULL_TONES = {
+    "fond": ((120, 92, 58, 255), (139, 107, 69, 255), (92, 70, 44, 255)),
+    "pont": ((132, 102, 65, 255), (154, 120, 78, 255), (101, 77, 48, 255)),
+    "borde": ((146, 113, 72, 255), (170, 134, 88, 255), (110, 84, 53, 255)),
+    "tableau": ((146, 113, 72, 255), (170, 134, 88, 255), (110, 84, 53, 255)),
+    "etrave": ((138, 106, 67, 255), (162, 128, 84, 255), (105, 80, 50, 255)),
+    "liston": ((172, 137, 91, 255), (196, 160, 110, 255), (128, 100, 64, 255)),
+    "banquette": ((172, 137, 91, 255), (196, 160, 110, 255), (128, 100, 64, 255)),
+    "banc": ((158, 124, 81, 255), (182, 147, 99, 255), (118, 91, 58, 255)),
+}
+
+
+def planks(image, x, y, w, h, tone=None):
+    """Remplit une face de planches : joints sombres tous les 4 px, veinure claire au-dessus.
+
+    La phase des joints dépend de la position de la face dans l'atlas : deux faces voisines ne
+    s'alignent pas, ce qui évite l'effet « papier peint » sur une coque de 23 pièces."""
+    base, light, dark = tone or (WOOD, WOOD_LIGHT, WOOD_DARK)
+    phase = (x * 7 + y * 3) % 4
+    image.rect(x, y, w, h, base)
     for row in range(y, y + h):
-        if (row - y) % 4 == 3:
-            image.rect(x, row, w, 1, WOOD_DARK)
-        elif (row - y) % 4 == 0:
-            image.rect(x, row, w, 1, WOOD_LIGHT)
-    image.rect(x, y, 1, h, WOOD_DARK)
-    image.rect(x + w - 1, y, 1, h, WOOD_DARK)
+        if (row - y + phase) % 4 == 3:
+            image.rect(x, row, w, 1, dark)
+        elif (row - y + phase) % 4 == 0:
+            image.rect(x, row, w, 1, light)
+        # veinure : un pixel sombre isolé, toujours au même endroit pour une face donnée
+        elif w > 5 and (row * 5 + x * 11) % 7 == 0:
+            image.rect(x + ((row * 13 + x * 5) % (w - 2)) + 1, row, 1, 1, dark)
+    # arêtes : liseré clair en haut, sombre en bas et sur les côtés
+    image.rect(x, y, w, 1, light)
+    image.rect(x, y + h - 1, w, 1, dark)
+    image.rect(x, y, 1, h, dark)
+    image.rect(x + w - 1, y, 1, h, dark)
 
 
 def big_hull_texture():
-    image = Image(256, 128)
-    for u, v, dx, dy, dz in BIG_HULL_BOXES.values():
+    """Peint la grande coque d'après tools/art/big_hull.bbmodel : une teinte par famille de pièce,
+    les UV viennent du modèle (uv_offset), jamais d'une table recopiée ici."""
+    model = json.loads(HULL_MODEL.read_text(encoding="utf-8"))
+    image = Image(model["resolution"]["width"], model["resolution"]["height"])
+    for element in model["elements"]:
+        u, v = element["uv_offset"]
+        dx, dy, dz = (math.ceil(element["to"][i] - element["from"][i]) for i in range(3))
+        tone = HULL_TONES[element["name"].split("_")[0]]
         for x, y, w, h in box_faces(u, v, dx, dy, dz).values():
-            planks(image, x, y, w, h)
-    # Plan d'eau : rendu en masque, jamais vu, mais on ne laisse pas de trou dans l'atlas.
-    image.rect(128, 0, 34, 26, WOOD_DARK)
+            planks(image, x, y, w, h, tone)
     image.save(ASSETS / "entity/big_motorboat.png")
 
 

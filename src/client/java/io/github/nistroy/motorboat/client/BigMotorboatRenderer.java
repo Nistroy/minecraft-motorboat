@@ -25,13 +25,16 @@ public class BigMotorboatRenderer extends EntityRenderer<Boat> {
 
     private static final ResourceLocation HULL_TEXTURE = Motorboat.id("textures/entity/big_motorboat.png");
 
+    /** Recul du bloc moteur sur la grande coque, en unités de modèle (1/16 de bloc). */
+    private static final float ENGINE_OFFSET = -2.0F;
+
     private final BigMotorboatModel model;
 
     private final ModelPart engine;
 
     public BigMotorboatRenderer(EntityRendererProvider.Context context) {
         super(context);
-        this.shadowRadius = 1.0F;
+        this.shadowRadius = 1.25F;
         this.model = new BigMotorboatModel(context.bakeLayer(HULL_LAYER));
         this.engine = context.bakeLayer(MotorboatRenderer.ENGINE_LAYER);
     }
@@ -46,7 +49,12 @@ public class BigMotorboatRenderer extends EntityRenderer<Boat> {
         if (!boat.isUnderWater()) {
             model.waterPatch().render(pose, buffers.getBuffer(RenderType.waterMask()), light, OverlayTexture.NO_OVERLAY);
         }
+        // Moteur calé contre le tableau arrière, pile devant la banquette du pilote : la boîte du
+        // moteur est dessinée pour la barque 2 places, la grande coque la recule de 2 px.
+        pose.pushPose();
+        pose.translate(ENGINE_OFFSET / 16.0F, 0.0F, 0.0F);
         MotorboatRenderer.renderEngine(engine, pose, buffers, light, MotorboatRenderer.motorOf(boat));
+        pose.popPose();
         pose.popPose();
         super.render(boat, yaw, partialTicks, pose, buffers, light);
     }
