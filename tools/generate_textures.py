@@ -79,6 +79,7 @@ def box_faces(u, v, dx, dy, dz):
 GUI_WIDTH = 176
 GUI_HEIGHT = 190
 FUEL_SLOT = (8, 18)
+MOTOR_SLOT = (52, 18)
 FLAME = (30, 19)
 STORAGE_TOP = 40
 PLAYER_TOP = 107
@@ -129,6 +130,7 @@ def gui_texture():
 def slot_positions():
     """Coins haut-gauche des 18 × 18 de chaque slot (le slot logique est 1 px plus bas à droite)."""
     yield FUEL_SLOT
+    yield MOTOR_SLOT
     for row in range(3):
         for col in range(9):
             yield (8 + col * 18, STORAGE_TOP + row * 18)
@@ -249,6 +251,42 @@ def motor_item():
     image.save(ASSETS / "item/motor.png")
 
 
+def big_motor_item():
+    """Gros moteur : même bloc que le moteur de base, en plus massif."""
+    image = Image(16, 16)
+    image.rect(5, 0, 6, 4, OUTLINE)
+    image.rect(6, 0, 4, 3, PIPE)
+    image.rect(6, 0, 4, 1, HOLE)
+    image.rect(1, 3, 14, 13, OUTLINE)
+    image.rect(2, 4, 12, 11, IRON)
+    image.rect(2, 4, 12, 1, IRON_LIGHT)
+    image.rect(2, 14, 12, 1, IRON_DARK)
+    image.rect(2, 8, 12, 2, COPPER)
+    image.rect(2, 10, 12, 1, COPPER_DARK)
+    for x in (3, 12):
+        image.rect(x, 5, 1, 1, IRON_LIGHT)
+        image.rect(x, 12, 1, 1, IRON_DARK)
+    image.save(ASSETS / "item/big_motor.png")
+
+
+def double_motor_item():
+    """Double moteur : deux blocs accouplés, un échappement chacun."""
+    image = Image(16, 16)
+    for left in (0, 8):
+        image.rect(left + 2, 1, 4, 4, OUTLINE)
+        image.rect(left + 3, 1, 2, 3, PIPE)
+        image.rect(left + 3, 1, 2, 1, HOLE)
+        image.rect(left, 4, 8, 12, OUTLINE)
+        image.rect(left + 1, 5, 6, 10, IRON)
+        image.rect(left + 1, 5, 6, 1, IRON_LIGHT)
+        image.rect(left + 1, 14, 6, 1, IRON_DARK)
+        image.rect(left + 1, 9, 6, 2, COPPER)
+        image.rect(left + 1, 11, 6, 1, COPPER_DARK)
+        image.rect(left + 1, 6, 1, 1, IRON_LIGHT)
+        image.rect(left + 6, 6, 1, 1, IRON_LIGHT)
+    image.save(ASSETS / "item/double_motor.png")
+
+
 def motorboat_item():
     image = Image(16, 16)
     # Coque vue de trois quarts : deux rangées de planches entre deux bords sombres.
@@ -272,6 +310,8 @@ if __name__ == "__main__":
     engine_texture()
     big_hull_texture()
     motor_item()
+    big_motor_item()
+    double_motor_item()
     motorboat_item()
     big_motorboat_item()
     print("textures générées dans", ASSETS)

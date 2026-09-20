@@ -4,8 +4,13 @@
 	"entity.motorboat.motorboat": "Barque à moteur",
 	"motorboat.message.fuel": "Réservoir : %s s de marche",
 	"motorboat.message.tank_full": "Réservoir plein",
-	"motorboat.tooltip.motorboat": "Accroupi + clic droit : soute ; avec un combustible, plein direct",
+	"motorboat.tooltip.motorboat": "Accroupi + clic droit : soute (moteur, réservoir, coffre)",
 	"item.motorboat.big_motorboat": "Grande barque à moteur",
 	"entity.motorboat.big_motorboat": "Grande barque à moteur",
-	"motorboat.tooltip.big_motorboat": "Six places · accroupi + clic droit pour ouvrir la soute"
+	"motorboat.tooltip.big_motorboat": "Six places, accepte tous les moteurs · accroupi + clic droit : soute",
+	"item.motorboat.big_motor": "Gros moteur",
+	"item.motorboat.double_motor": "Double moteur",
+	"motorboat.tooltip.motor": "Va sur les deux coques · se pose dans le slot moteur de la soute",
+	"motorboat.tooltip.big_motor": "Grande coque seulement · plus rapide que le moteur de base",
+	"motorboat.tooltip.double_motor": "Grande coque seulement · le plus rapide"
 }

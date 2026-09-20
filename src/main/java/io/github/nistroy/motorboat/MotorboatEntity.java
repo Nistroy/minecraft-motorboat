@@ -52,9 +52,22 @@ public class MotorboatEntity extends Boat
     /** Coffre de rangement, 3 rangées de 9 comme un coffre simple. */
     public static final int STORAGE_SLOTS = 27;
 
-    public static final int CONTAINER_SIZE = FIRST_STORAGE_SLOT + STORAGE_SLOTS;
+    /**
+     * Slot du moteur, rangé après le coffre : les index des slots existants ne bougent pas, donc les
+     * barques déjà posées gardent leur contenu.
+     */
+    public static final int MOTOR_SLOT = FIRST_STORAGE_SLOT + STORAGE_SLOTS;
+
+    public static final int CONTAINER_SIZE = MOTOR_SLOT + 1;
 
     private static final EntityDataAccessor<Integer> DATA_FUEL =
+            SynchedEntityData.defineId(MotorboatEntity.class, EntityDataSerializers.INT);
+
+    /**
+     * Palier du moteur installé. Le client simule le bateau du pilote et dessine le moteur, mais le
+     * contenu du conteneur ne lui est envoyé que menu ouvert : il lui faut donc le palier synchronisé.
+     */
+    private static final EntityDataAccessor<Integer> DATA_MOTOR =
             SynchedEntityData.defineId(MotorboatEntity.class, EntityDataSerializers.INT);
 
     private static final String FUEL_TAG = "Fuel";
@@ -91,6 +104,7 @@ public class MotorboatEntity extends Boat
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         super.defineSynchedData(builder);
         builder.define(DATA_FUEL, 0);
+        builder.define(DATA_MOTOR, MotorTier.NONE.id());
     }
 
     /** Réserve restante, en ticks de marche. */
@@ -104,6 +118,33 @@ public class MotorboatEntity extends Boat
         }
     }
 
+    /** Moteur installé dans le slot moteur, {@link MotorTier#NONE} si le slot est vide. */
+    public MotorTier motor() {
+        return MotorTier.byId(entityData.get(DATA_MOTOR));
+    }
+
+    private void setMotor(MotorTier tier) {
+        if (tier != motor()) {
+            entityData.set(DATA_MOTOR, tier.id());
+        }
+    }
+
+    /** Grande coque : plus lourde, donc plus lente à moteur égal (voir {@link MotorboatConfig}). */
+    public boolean isBigHull() {
+        return false;
+    }
+
+    /** Moteur accepté dans le slot : un moteur, et qui tient sur cette coque. */
+    public boolean acceptsMotor(ItemStack stack) {
+        MotorTier tier = Motorboat.motorTier(stack);
+        return tier != MotorTier.NONE && tier.fitsHull(isBigHull());
+    }
+
+    /** Moteur installé et de quoi brûler : le seul cas où la barque n'est pas un bateau à rames. */
+    private boolean engineRunning() {
+        return motor() != MotorTier.NONE && Motor.running(fuel());
+    }
+
     @Override
     public void setInput(boolean left, boolean right, boolean up, boolean down) {
         super.setInput(left, right, up, down);
@@ -113,24 +154,25 @@ public class MotorboatEntity extends Boat
     @Override
     public void tick() {
         if (level().isClientSide) {
-            if (throttle && Motor.running(fuel()) && isControlledByLocalInstance()) {
+            if (throttle && engineRunning() && isControlledByLocalInstance()) {
                 pushForward();
             }
-            if (Motor.running(fuel()) && isVehicle() && getDeltaMovement().horizontalDistanceSqr() > EFFECTS_SPEED_SQR) {
+            if (engineRunning() && isVehicle() && getDeltaMovement().horizontalDistanceSqr() > EFFECTS_SPEED_SQR) {
                 engineEffects();
             }
         } else {
-            if (!Motor.running(fuel())) {
+            setMotor(Motorboat.motorTier(items.get(MOTOR_SLOT)));
+            if (motor() != MotorTier.NONE && !Motor.running(fuel())) {
                 refuelFromTank();
             }
-            setFuel(Motor.burn(fuel(), driverPushingForward()));
+            setFuel(Motor.burn(fuel(), motor() != MotorTier.NONE && driverPushingForward()));
         }
         super.tick();
     }
 
     /** Poussée du moteur, dans l'axe du bateau, comme {@code Boat.controlBoat} pour la rame. */
     private void pushForward() {
-        double thrust = Thrust.extraAcceleration(Motorboat.config().topSpeed());
+        double thrust = Thrust.extraAcceleration(Motorboat.config().topSpeed(motor(), isBigHull()));
         float radians = getYRot() * ((float) Math.PI / 180F);
         setDeltaMovement(getDeltaMovement().add(Mth.sin(-radians) * thrust, 0.0, Mth.cos(radians) * thrust));
     }
@@ -347,5 +389,7 @@ public class MotorboatEntity extends Boat
         super.readAdditionalSaveData(tag);
         setFuel(Motor.clamp(tag.getInt(FUEL_TAG)));
         readChestVehicleSaveData(tag, registryAccess());
+        // Le moteur n'est pas sauvé à part : il est dans le slot, relu juste au-dessus.
+        setMotor(Motorboat.motorTier(items.get(MOTOR_SLOT)));
     }
 }

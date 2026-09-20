@@ -36,6 +36,11 @@ public class BigMotorboatEntity extends MotorboatEntity {
     }
 
     @Override
+    public boolean isBigHull() {
+        return true;
+    }
+
+    @Override
     protected int getMaxPassengers() {
         return MAX_PASSENGERS;
     }
