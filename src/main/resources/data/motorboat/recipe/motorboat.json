@@ -1,16 +1,16 @@
 {
-	"type": "minecraft:crafting_shapeless",
+	"type": "minecraft:crafting_shaped",
 	"category": "equipment",
-	"ingredients": [
-		{
+	"key": {
+		"I": {
+			"item": "minecraft:iron_ingot"
+		},
+		"B": {
 			"tag": "minecraft:boats"
-		},
-		{
-			"item": "minecraft:iron_ingot"
-		},
-		{
-			"item": "minecraft:iron_ingot"
 		}
+	},
+	"pattern": [
+		"IBI"
 	],
 	"result": {
 		"count": 1,
