@@ -10,6 +10,8 @@ public final class MotorboatClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         EntityModelLayerRegistry.registerModelLayer(MotorboatRenderer.ENGINE_LAYER, MotorboatRenderer::createEngineLayer);
+        EntityModelLayerRegistry.registerModelLayer(
+                MotorboatRenderer.BIG_ENGINE_LAYER, MotorboatRenderer::createBigEngineLayer);
         EntityRendererRegistry.register(Motorboat.MOTORBOAT_ENTITY, MotorboatRenderer::new);
         EntityModelLayerRegistry.registerModelLayer(BigMotorboatRenderer.HULL_LAYER, BigMotorboatModel::createBodyModel);
         EntityRendererRegistry.register(Motorboat.BIG_MOTORBOAT_ENTITY, BigMotorboatRenderer::new);

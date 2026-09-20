@@ -10,11 +10,11 @@ Fichier de reprise : session qui repart lit **ça** puis `CLAUDE.md`. Mettre à 
 - Contenu v0.3.x (en ligne) : soute (réservoir + slot moteur + coffre 27), grande barque 6 places,
   3 moteurs (`motor` 16 / `big_motor` 24 / `double_motor` 32 blocs/s, grande coque ×0,85), recettes à
   forme fixe, config sans plafond de vitesse.
-- **Chantier en cours : les moteurs** (voir §Backlog pour le pourquoi). Silhouette de hors-bord
-  proposée à nistroy 2026-09-20, **en attente de sa validation** : chape à cheval sur le tableau,
-  capot derrière, arbre + embase + hélice sous la flottaison, barre franche vers le pilote, tout en
-  tailles entières. Question ouverte : la barque 2 places partage le modèle — moteur dehors pour elle
-  aussi, ou deux modèles séparés ?
+- **Chantier en cours : les moteurs.** Hors-bord validé par nistroy 2026-09-20, **les deux barques
+  à l'extérieur** (un seul modèle partagé, chaque coque passe son point d'accrochage). Fait : maquettes
+  `tools/art/motor.bbmodel` et `big_motor.bbmodel`, textures générées, `MotorboatRenderer` réécrit
+  (deux couches, plus de mise à l'échelle). Reste : vérifier dans `runClient`, puis `0.5.0` + release,
+  puis le déploiement reporté (§Étapes 8).
 
 ## Demande (nistroy 2026-09-20)
 Coque de la grande barque jugée trop « radeau » (caisse : fond plat + 4 parois droites). **nistroy
@@ -141,35 +141,29 @@ le premier monté pilote.
   `forceload add 0 0` avant toute mesure, sinon `Fuel` reste à 0 et on croit à un bug.
 - Dépôt `minecraft-server` : checkout live, **jamais** changer sa branche → worktree + `merge --ff-only`.
 
-## Backlog (sorti du périmètre 0.4.0)
+## Hors-bord (`tools/art/motor.bbmodel`, `big_motor.bbmodel`)
+Repère local : **origine = point d'accrochage** (arête haute du tableau arrière, face extérieure),
++X vers la proue, Y vers le haut. Conversion : `y_mod = -y_local`, x et z inchangés ; la coque
+translate ensuite jusqu'à son accrochage, d'où un seul modèle pour les deux barques.
+- Accrochages (`MotorboatRenderer.Mount`) : barque 2 places `(-16, -3)`, grande coque `(-21, -8)`.
+  Le `(-16, -3)` vient du modèle vanilla relevé au javap 1.21.1 : tableau arrière `x -16..-14`,
+  parois `y -3..3`, plancher `y 3..6`.
+- Pièces : chape, capot, échappement(s), arbre, embase, hélice (deux pales croisées), barre franche.
+  Arbre jusqu'à `y_local -11` → 2 px sous le fond de coque sur les deux barques, embase et hélice
+  sous la flottaison.
+- Tailles entières partout : le gros moteur a **son propre modèle** (capot 7×8×7, deux échappements)
+  au lieu de l'ancien ×1,35 qui sortait de la grille de pixels.
+- Double = deux hors-bord de base à ±4 en Z (capot de 6 de large → 2 px d'écart).
+- Textures `64 × 64` générées par `engine_textures()` depuis les maquettes, teintes par famille de nom
+  (`ENGINE_TONES`) ; bandeau de cuivre sur les flancs du capot, seule touche de couleur.
+
+## Backlog
 - **Choisir sa place** (question nistroy 2026-09-20) : faisable mais pas gratuit — vanilla attribue le
   siège par ordre de montée (`getPassengers().indexOf`). Il faut un plan de sièges stocké et
   **synchronisé** (le client du pilote calcule les attaches), le choix du siège libre le plus proche
   dans `interact`, et redéfinir `getControllingPassenger` pour que ce soit l'occupant de la barre qui
   pilote. À part, après la coque.
-- **Modèles de moteur** (avis rendu à nistroy 2026-09-20, à faire après la coque) : garder le double
-  tel quel (deux blocs à ±3, 1 px d'écart — deux moteurs, c'est ce qu'il faut lire) ; **refaire le
-  gros**, qui n'est que le bloc de base ×1,35 : 4 px → 5,4, les texels tombent hors grille et ça rend
-  flou. Modèle dédié en tailles entières. Refaire aussi le moteur de base (capot, arbre, hélice, barre
-  franche vers le pilote) : il est désormais pile devant lui. **Le modèle de base doit rester petit**,
-  c'est le seul admis sur la barque 2 places (`MotorTier.fitsHull`) ; gros et double ne s'affichent que
-  sur la grande coque. Même montage que la coque : `.bbmodel` dans `tools/art/`, texture générée.
-
-- **Saut et figures** (idée nistroy 2026-09-20, visée 0.5) : espace en pilotant → impulsion Y (~0,6 →
-  ~2,5 blocs, ~1 s en l'air ; `floatBoat` amortit le Y de 0,75 sous la ligne d'eau, puis balistique,
-  gravité −0,04/tick, friction sur x/z seulement — javap 1.21.1). Direction tenue au décollage =
-  figure **purement visuelle** dans `applyBoatPose` : gauche/droite tonneau (axe Z), avant/arrière
-  salto (axe X), rien saut simple ; 360° sur la durée du vol, donc retombe à plat. La hitbox ne tourne
-  jamais (AABB alignées) et les passagers restent dessinés debout. Pilotage en l'air déjà acquis :
-  `controlBoat` n'est gardé que par `isVehicle()`, pas par le statut. Coût : bouffée de carburant +
-  cooldown (~3 s) qui **ne démarre qu'à l'amerrissage** (pas d'enchaînement en l'air), compteur
-  serveur synchronisé comme `Fuel` → le client prédit et affiche ; son + actionbar quand c'est prêt,
-  message de refus si trop tôt. **Piège** : `checkFallDamage` tue le bateau au-delà de 3 blocs de
-  chute hors de l'eau, et `remove()` vide la soute par terre → avaler la distance de chute tant que la
-  figure est en cours. Plomberie : touche lue côté client (espace ne fait rien en bateau), impulsion
-  appliquée par le client du pilote (il fait autorité sur la position), payload vers le serveur qui
-  valide le cooldown et rediffuse la figure pour l'animation des autres clients ; logique pure testée
-  dans `Trick.java`.
+- (vidé : les modèles de moteur sont passés en chantier courant, voir §Hors-bord)
 
 ## Reste en attente (hors art)
 - Supprimer la branche `test/motorboat-0-3-0` (dépôt serveur) et la pré-version `test-0.3.0-rc1` quand
