@@ -32,10 +32,13 @@ modélise dans Blockbench et refait les sprites d'items ; l'agent recâble, ne c
 
 ## Contraintes données à nistroy (ne pas les contredire)
 - 1 unité Blockbench = 1 px Minecraft = 1/16 bloc ; modéliser **Y vers le haut**, l'agent gère l'inversion.
-- Hitbox `sized(2.5F, 0.5625F)` (40 px, **carrée en X/Z**), passée de 2,25 à 2,5 avec l'allongement
-  (nistroy 2026-09-20). Le modèle a le droit de déborder, vanilla le fait déjà (coque de 28 px dans
-  une hitbox de 22, javap 1.21.1) : 48 px pour 40 = +20 %, vanilla +27 %. Largeur : rester ≤ 28 px,
-  sinon on cogne les berges.
+- Hitbox `sized(2.25F, 0.5625F)` (36 px) — **ne pas l'agrandir pour allonger le bateau**. Une hitbox
+  d'entité est **toujours carrée en X/Z** : `EntityDimensions` n'a que `width` et `height` (javap
+  1.21.1), et l'AABB ne tourne pas avec le lacet. Monter à 2,5 pour la longueur élargit donc aussi,
+  et c'est la largeur qui coince dans les rivières → essayé puis annulé (nistroy 2026-09-20).
+  Le modèle déborde à la place : 48 px pour 36 = +33 %, vanilla +27 % (coque de 28 dans 22).
+  Conséquence acceptée : la barre est à 1,375 du centre, soit 0,25 hors de la boîte.
+- Largeur : rester ≤ 28 px, sinon on cogne les berges.
 - Coque v0.3 (celle qu'on remplace) : 36 long × 28 large × 7 haut, fond 1 d'épaisseur ; texture `256 × 128`.
 - Plan d'eau (masque) et six sièges : **en code**, nistroy ne les modélise pas. Bancs éventuels → aligner
   les sièges dessus.
