@@ -18,8 +18,9 @@ import net.minecraft.world.entity.vehicle.Boat;
  *
  * <p>Les boîtes ne sont pas écrites à la main : elles sont traduites de {@code tools/art/big_hull.bbmodel}
  * (maquette Blockbench, source de la forme **et** de la texture). Conversion : x et z inchangés,
- * {@code y_mod = 1 - y_bb}, et **rotation Y de signe opposé** — le {@code scale(-1, -1, 1)} inverse le
- * sens des rotations autour de Y. Retoucher la maquette → retraduire ici et relancer
+ * {@code y_mod = 1 - y_bb}, et **rotation Y de même signe** : le {@code scale(-1, -1, 1)} est une
+ * rotation de 180° autour de Z (déterminant +1), pas un miroir, il ne retourne pas le sens des
+ * rotations (vérifié en jeu le 2026-09-20 — l'inverser ouvrait l'étrave en ailes). Retoucher la maquette → retraduire ici et relancer
  * {@code tools/generate_textures.py} ; voir {@code PLAN.md}.
  */
 public class BigMotorboatModel extends ListModel<Boat> {
@@ -166,7 +167,7 @@ public class BigMotorboatModel extends ListModel<Boat> {
                         .texOffs(176, 82)
                         .addBox(0F, -8F, -1.5F, 14.6F, 1F, 2.5F),
                 PartPose.offsetAndRotation(11F, 0F, 13F,
-                        0.0F, -0.9068F, 0.0F));
+                        0.0F, 0.9068F, 0.0F));
         hull.addOrReplaceChild(
                 "proue_td",
                 CubeListBuilder.create()
@@ -175,7 +176,7 @@ public class BigMotorboatModel extends ListModel<Boat> {
                         .texOffs(0, 104)
                         .addBox(0F, -8F, -1F, 14.6F, 1F, 2.5F),
                 PartPose.offsetAndRotation(11F, 0F, -13F,
-                        0.0F, 0.9068F, 0.0F));
+                        0.0F, -0.9068F, 0.0F));
         // Plan horizontal masquant l'eau à l'intérieur de la coque (même astuce que le bateau vanilla :
         // boîte plate en XY, couchée par une rotation d'un quart de tour). Rendu en masque d'eau : ses
         // UV ne sont jamais échantillonnées, seules ses dimensions comptent (intérieur x -19..11, z ±12).

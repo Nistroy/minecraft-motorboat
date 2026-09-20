@@ -84,8 +84,10 @@ le premier monté pilote.
 
 ## Conversion maquette → modèle du mod (à faire au recâblage)
 - `x_mod = x_bb`, `z_mod = z_bb`, **`y_mod = 1 − y_bb`** (le rendu monte en −Y).
-- `scale(-1, -1, 1)` inverse le sens des rotations autour de Y → **`yRot_mod = −rot_Y_bb`**.
-  À confirmer dans `runClient` : si l'étrave part du mauvais bord, c'est ce signe.
+- **`yRot_mod = +rot_Y_bb`**, même signe (vérifié en jeu 2026-09-20). `scale(-1, -1, 1)` a un
+  déterminant de +1 : c'est une rotation de 180° autour de Z, **pas un miroir**, elle ne retourne
+  pas le sens des rotations. L'avoir inversé ouvrait les deux panneaux d'étrave en ailes au lieu de
+  les fermer en pointe.
 - `addBox(x, y, z, w, h, d)` prend le coin **minimal** : `y_mod` du coin = `1 − y_bb_max`.
 
 ## Repères techniques (relevés au javap 1.21.1, ne pas re-deviner)
@@ -112,10 +114,11 @@ le premier monté pilote.
 - [x] 5. Sièges : classe pure `SeatPlan` (6 places, testée : symétrie, barre la plus à l'arrière et
       la plus haute, index écrêté), `BigMotorboatEntity` y délègue ; moteur reculé de 2 px dans
       `BigMotorboatRenderer` (`ENGINE_OFFSET`), ombre portée 1,25. `sized()` inchangé.
-- [ ] 6. `./gradlew build` vert (fait, tests compris) **et** `./gradlew runClient` — reste à faire,
-      le rendu ne se vérifie pas autrement. À regarder : sens de l'étrave (si elle part du mauvais
-      bord, c'est le signe de la rotation Y), assise du pilote sur la banquette, moteur devant lui,
-      pas de trou à l'étrave, texture à l'endroit.
+- [ ] 6. `./gradlew build` vert (fait, tests compris) **et** `./gradlew runClient`.
+      1ère passe 2026-09-20 : physique OK, texture OK, aucune texture manquante au log ; **étrave en
+      ailes** → signe de rotation corrigé (§Conversion), à revérifier. Reste à regarder : assise du
+      pilote sur la banquette, moteur devant lui (il faut **poser un moteur dans la soute**, sans
+      moteur rien n'est dessiné, c'est voulu), pas de trou à l'étrave.
 - [ ] 7. Version `0.4.0`, PR, merge, tag `v0.4.0` → release (workflow : tag = `version` de
       `gradle.properties`, sinon il échoue).
 - [ ] 8. Déploiement, **les deux ensemble** : `server/mods/` du dépôt serveur + `pack/mods/motorboat.pw.toml`
