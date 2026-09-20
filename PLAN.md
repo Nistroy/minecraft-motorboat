@@ -15,7 +15,10 @@ modélise dans Blockbench et refait les sprites d'items ; l'agent recâble, ne c
 
 - Sprites d'items : **livrés et en place** 2026-09-20 (branche `feat/item-sprites`), planche
   `tools/art/motorboat_items.png`.
-- Reste attendu de nistroy : `.bbmodel` (projet, pas un export) + PNG de texture de coque
+- Coque : **maquette de départ fournie par l'agent** à la demande de nistroy (2026-09-20),
+  `tools/art/big_hull.bbmodel` sur la branche `art/coque` — barque vanilla agrandie, à retoucher
+  dans Blockbench (pas d'art fait par l'agent : formes seulement, aucune texture).
+- Reste attendu de nistroy : le `.bbmodel` retouché (projet, pas un export) + PNG de texture de coque
   (`256 × 128` aujourd'hui). Transfert : branche `art/coque` (upload web GitHub) ou Discord.
 - Pas de tag tant que la coque n'est pas là : sprites + coque sortent ensemble en `0.4.0`
   (choix nistroy 2026-09-20).
@@ -27,6 +30,28 @@ modélise dans Blockbench et refait les sprites d'items ; l'agent recâble, ne c
 - Plan d'eau (masque) et six sièges : **en code**, nistroy ne les modélise pas. Bancs éventuels → aligner
   les sièges dessus.
 - Bloc moteur refaisable aussi : 4×7×5 + échappement 2×4×2, texture `32 × 32`.
+- Repère de la maquette : quille posée sur `y = 0`, **+X = proue**, Z en travers. Ne pas déplacer la
+  coque en bloc, les chiffres de recâblage en dépendent.
+
+## Maquette `tools/art/big_hull.bbmodel` (agent, 2026-09-20)
+23 cubes, `box_uv` dans `256 × 128` (empreintes packées sans recouvrement, vérifié), aucune texture
+attachée → Blockbench « Créer texture » en mode gabarit pour peindre. Encombrement **36 × 28 × 10**
+(x ±18, z ±14, y 0→10), rotations comprises.
+- Groupe `coque` : fond (+ 4 marches d'étrave), bordés 2 d'épaisseur × 6 de haut, tableau arrière,
+  listons (débord 0,5 vers l'intérieur), pont avant à hauteur de liston, étrave, 4 bancs.
+- Groupes `proue_bd`/`proue_td` : bordé + liston inclinés, pivot `(9, 1, ±13)`, rotation Y `±55,176°`,
+  longueur 14 → pointe à `(17, ±1,5)`. **Une rotation par groupe** (format `modded_entity` : les cubes
+  ne tournent pas seuls) → conversion directe en `PartPose.offsetAndRotation`.
+- Pièces de fond/pont de l'étrave taillées à la largeur de leur **bord arrière** : le débord (≤ 2,875)
+  reste noyé dans l'épaisseur du bordé incliné (3,5 mesurés en Z) donc invisible ; les tailler au bord
+  avant laisserait un trou.
+- Bancs arrière coupés à `|z| ≥ 5,5` : le double moteur dessine deux blocs à `±3` en Z (± 2,5 de demi-bloc).
+
+## Conversion maquette → modèle du mod (à faire au recâblage)
+- `x_mod = x_bb`, `z_mod = z_bb`, **`y_mod = 1 − y_bb`** (le rendu monte en −Y).
+- `scale(-1, -1, 1)` inverse le sens des rotations autour de Y → **`yRot_mod = −rot_Y_bb`**.
+  À confirmer dans `runClient` : si l'étrave part du mauvais bord, c'est ce signe.
+- `addBox(x, y, z, w, h, d)` prend le coin **minimal** : `y_mod` du coin = `1 − y_bb_max`.
 
 ## Repères techniques (relevés au javap 1.21.1, ne pas re-deviner)
 - Repère après `MotorboatRenderer.applyBoatPose` : **+X = proue**, **−Y = haut** (`scale(-1, -1, 1)`),
@@ -48,7 +73,10 @@ modélise dans Blockbench et refait les sprites d'items ; l'agent recâble, ne c
 - [ ] 3a. Texture de coque en place (`assets/motorboat/textures/entity/`) ; ajuster
       `TEXTURE_WIDTH`/`TEXTURE_HEIGHT` si nistroy a changé la taille, et retirer `big_hull_texture()`
       de `tools/generate_textures.py`.
-- [ ] 5. Sièges et `sized()` réajustés si les proportions changent.
+- [ ] 5. Sièges et `sized()` réajustés : la maquette suppose `ROW_OFFSETS = {0.6, 0.0, -0.6}`
+      (au lieu de `±0.7`) — à `±0,7` le rang avant tombe dans l'étrave, hors des bancs.
+      Assise : dessus des bancs à `y_bb = 3` → monde `+0,5` ; `getPassengerAttachmentPoint` rend
+      aujourd'hui `height/3 = 0,1875`, à remonter (vanilla enfonce l'assise de 3 px sous le plancher).
 - [ ] 6. `./gradlew build` vert **et** `./gradlew runClient` (le rendu ne se vérifie pas autrement).
 - [ ] 7. Version `0.4.0`, PR, merge, tag `v0.4.0` → release (workflow : tag = `version` de
       `gradle.properties`, sinon il échoue).
