@@ -25,8 +25,10 @@ modélise dans Blockbench et refait les sprites d'items ; l'agent recâble, ne c
 
 ## Contraintes données à nistroy (ne pas les contredire)
 - 1 unité Blockbench = 1 px Minecraft = 1/16 bloc ; modéliser **Y vers le haut**, l'agent gère l'inversion.
-- Encombrement ≤ 36 × 36 unités au sol (hitbox `sized(2.25F, 0.5625F)`, **carrée en X/Z**) ; hauteur libre.
-- Coque actuelle : 36 long × 28 large × 7 haut, fond 1 d'épaisseur ; texture `256 × 128`.
+- Hitbox `sized(2.25F, 0.5625F)` (36 px, **carrée en X/Z**), **inchangée** : le modèle a le droit de
+  déborder, vanilla le fait déjà (coque de 28 px dans une hitbox de 22, relevé au javap 1.21.1).
+  Débord actuel 42 px = +17 %, vanilla +27 %. Largeur : rester ≤ 28 px, sinon on cogne les berges.
+- Coque v0.3 (celle qu'on remplace) : 36 long × 28 large × 7 haut, fond 1 d'épaisseur ; texture `256 × 128`.
 - Plan d'eau (masque) et six sièges : **en code**, nistroy ne les modélise pas. Bancs éventuels → aligner
   les sièges dessus.
 - Bloc moteur refaisable aussi : 4×7×5 + échappement 2×4×2, texture `32 × 32`.
@@ -34,18 +36,38 @@ modélise dans Blockbench et refait les sprites d'items ; l'agent recâble, ne c
   coque en bloc, les chiffres de recâblage en dépendent.
 
 ## Maquette `tools/art/big_hull.bbmodel` (agent, 2026-09-20)
-23 cubes, `box_uv` dans `256 × 128` (empreintes packées sans recouvrement, vérifié), aucune texture
-attachée → Blockbench « Créer texture » en mode gabarit pour peindre. Encombrement **36 × 28 × 10**
-(x ±18, z ±14, y 0→10), rotations comprises.
-- Groupe `coque` : fond (+ 4 marches d'étrave), bordés 2 d'épaisseur × 6 de haut, tableau arrière,
+24 cubes, `box_uv` dans `256 × 128` (empreintes packées sans recouvrement, vérifié), aucune texture
+attachée → Blockbench « Créer texture » en mode gabarit pour peindre. Encombrement **42 × 28 × 10**
+(x ±21, z ±14, y 0→10), rotations comprises. Allongée de 36 à 42 à la demande de nistroy (2026-09-20)
+pour loger le poste de barre ; le `big_motorboat.png` généré suit les UV de la v0.3, il ne colle plus.
+- Groupe `coque` : fond (+ 5 marches d'étrave), bordés 2 d'épaisseur × 6 de haut, tableau arrière,
   listons (débord 0,5 vers l'intérieur), pont avant à hauteur de liston, étrave, 4 bancs.
-- Groupes `proue_bd`/`proue_td` : bordé + liston inclinés, pivot `(9, 1, ±13)`, rotation Y `±55,176°`,
-  longueur 14 → pointe à `(17, ±1,5)`. **Une rotation par groupe** (format `modded_entity` : les cubes
+- Groupes `proue_bd`/`proue_td` : bordé + liston inclinés, pivot `(11, 1, ±13)`, rotation Y `±51,953°`,
+  longueur 14,6 → pointe à `(20, ±1,5)`. **Une rotation par groupe** (format `modded_entity` : les cubes
   ne tournent pas seuls) → conversion directe en `PartPose.offsetAndRotation`.
-- Pièces de fond/pont de l'étrave taillées à la largeur de leur **bord arrière** : le débord (≤ 2,875)
-  reste noyé dans l'épaisseur du bordé incliné (3,5 mesurés en Z) donc invisible ; les tailler au bord
-  avant laisserait un trou.
-- Bancs arrière coupés à `|z| ≥ 5,5` : le double moteur dessine deux blocs à `±3` en Z (± 2,5 de demi-bloc).
+- Pièces de fond/pont de l'étrave taillées à la largeur de leur **bord arrière** : le débord (≤ 3,0)
+  reste noyé dans l'épaisseur du bordé incliné (2 / cos 51,953° = 3,25 mesurés en Z) donc invisible ;
+  les tailler au bord avant laisserait un trou.
+
+## Plan de sièges de la maquette (à recâbler, `BigMotorboatEntity`)
+Six places, **pilote à la barre** (nistroy 2026-09-20). `Boat.getControllingPassenger` = **premier
+passager** (javap 1.21.1) → le siège 0 doit être la barre, le premier monté pilote.
+| siège | banc | x maquette (px) | travers z (px) | entité : `along` / `across` (blocs) |
+|---|---|---|---|---|
+| 0 (barre) | `banc_barre` | −13 | 0 | −0,8125 / 0 |
+| 1-2 | `banc_milieu_ar` | −4 | ±6,4 | −0,25 / ∓0,4 |
+| 3-4 | `banc_milieu_av` | +5 | ±6,4 | +0,3125 / ∓0,4 |
+| 5 | `banc_etrave` | +13,5 | 0 | +0,84375 / 0 |
+- `ROW_OFFSETS`/`SEAT_OFFSET` ne suffisent plus (rangs inégaux, deux places centrales) → table de
+  6 couples `(along, across)`, `along` = x maquette / 16, `across` = z maquette / 16.
+- Attache = `new Vec3(across, hauteur, along).yRot(-yRot)` : **Z = proue côté entité**, donc
+  `along` vient du **x** de la maquette.
+- Assise : dessus des bancs à `y_bb = 3` → monde `+0,5` ; `getPassengerAttachmentPoint` rend
+  aujourd'hui `height/3 = 0,1875`, à remonter (vanilla enfonce l'assise de 3 px sous le plancher).
+- **Moteur reculé contre le tableau arrière pour la grande coque seulement** : `translate(-4/16, 0, 0)`
+  dans `BigMotorboatRenderer` avant `renderEngine` (boîte `x −15..−11` → `−19..−15`). Ne pas toucher
+  `MotorboatRenderer`, la barque 2 places garde son moteur où il est.
+- `banc_barre` (x −15..−11) est calé pile devant le moteur, double moteur compris (deux blocs à ±3 en Z).
 
 ## Conversion maquette → modèle du mod (à faire au recâblage)
 - `x_mod = x_bb`, `z_mod = z_bb`, **`y_mod = 1 − y_bb`** (le rendu monte en −Y).
@@ -73,10 +95,8 @@ attachée → Blockbench « Créer texture » en mode gabarit pour peindre. Enco
 - [ ] 3a. Texture de coque en place (`assets/motorboat/textures/entity/`) ; ajuster
       `TEXTURE_WIDTH`/`TEXTURE_HEIGHT` si nistroy a changé la taille, et retirer `big_hull_texture()`
       de `tools/generate_textures.py`.
-- [ ] 5. Sièges et `sized()` réajustés : la maquette suppose `ROW_OFFSETS = {0.6, 0.0, -0.6}`
-      (au lieu de `±0.7`) — à `±0,7` le rang avant tombe dans l'étrave, hors des bancs.
-      Assise : dessus des bancs à `y_bb = 3` → monde `+0,5` ; `getPassengerAttachmentPoint` rend
-      aujourd'hui `height/3 = 0,1875`, à remonter (vanilla enfonce l'assise de 3 px sous le plancher).
+- [ ] 5. Sièges : table de 6 places ci-dessus (§Plan de sièges), décalage du moteur, assise remontée.
+      `sized()` inchangé.
 - [ ] 6. `./gradlew build` vert **et** `./gradlew runClient` (le rendu ne se vérifie pas autrement).
 - [ ] 7. Version `0.4.0`, PR, merge, tag `v0.4.0` → release (workflow : tag = `version` de
       `gradle.properties`, sinon il échoue).
@@ -92,6 +112,15 @@ attachée → Blockbench « Créer texture » en mode gabarit pour peindre. Enco
 - RCON sur `runServer` : sans joueur, les entités ne tiquent pas dans les chunks de spawn →
   `forceload add 0 0` avant toute mesure, sinon `Fuel` reste à 0 et on croit à un bug.
 - Dépôt `minecraft-server` : checkout live, **jamais** changer sa branche → worktree + `merge --ff-only`.
+
+## Backlog (sorti du périmètre 0.4.0)
+- **Choisir sa place** (question nistroy 2026-09-20) : faisable mais pas gratuit — vanilla attribue le
+  siège par ordre de montée (`getPassengers().indexOf`). Il faut un plan de sièges stocké et
+  **synchronisé** (le client du pilote calcule les attaches), le choix du siège libre le plus proche
+  dans `interact`, et redéfinir `getControllingPassenger` pour que ce soit l'occupant de la barre qui
+  pilote. À part, après la coque.
+- **Trois vraies formes de moteur** : aujourd'hui un seul modèle 4×7×5 pour les trois paliers (gros =
+  ×1,35, double = deux copies). Demanderait de l'art en plus.
 
 ## Reste en attente (hors art)
 - Supprimer la branche `test/motorboat-0-3-0` (dépôt serveur) et la pré-version `test-0.3.0-rc1` quand
