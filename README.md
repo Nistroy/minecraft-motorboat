@@ -39,8 +39,13 @@ trop encombrants pour la barque 2 places et ne se posent que sur la grande.
 
 ### Les coques
 
-1. **Barque à moteur** : n'importe quel bateau + 2 lingots de fer (recette sans forme). Deux places.
-   Elle sort de la table **sans moteur** : c'est un bâti, le moteur se pose dedans.
+1. **Barque à moteur** : n'importe quel bateau entre 2 lingots de fer. Deux places. Elle sort de la
+   table **sans moteur** : c'est un bâti, le moteur se pose dedans.
+
+   ```
+   I B I      I = lingot de fer
+              B = n'importe quel bateau
+   ```
 2. **Grande barque à moteur** : une barque à moteur entourée de 7 planches. Six places, trois rangs de
    deux.
 

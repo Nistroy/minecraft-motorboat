@@ -42,8 +42,8 @@ combustible de four, soute (réservoir + moteur + coffre 27), grande barque 6 pl
 - Le palier vit dans le slot 28 du conteneur (pas de NBT à part) mais le contenu n'est envoyé au
   client que menu ouvert → il est aussi publié en `SynchedEntityData` (`DATA_MOTOR`) pour la poussée
   (simulée par le client du pilote) et le rendu.
-- Coque craftée **sans** moteur (bateau + 2 fer) : sinon casser la barque rendrait coque + moteur,
-  soit un moteur gratuit par cycle.
+- Coque craftée **sans** moteur (`fer bateau fer`, forme fixe demandée par nistroy 2026-09-20) :
+  sinon casser la barque rendrait coque + moteur, soit un moteur gratuit par cycle.
 - Rendu : BASIC = bloc moteur, BIG = même bloc × 1,35 autour du coin poupe/pont, DOUBLE = deux blocs
   à ±3 unités en travers (`MotorboatRenderer.renderEngine`).
 
