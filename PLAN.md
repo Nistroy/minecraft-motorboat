@@ -166,30 +166,35 @@ translate ensuite jusqu'à son accrochage, d'où un seul modèle pour les deux b
 - Textures `64 × 64` générées par `engine_textures()` depuis les maquettes, teintes par famille de nom
   (`ENGINE_TONES`) ; bandeau de cuivre sur les flancs du capot, seule touche de couleur.
 
-## Houle (`Wave` + `MotorboatRenderer.applyWave`, 2026-09-20)
-Étrave qui sautille sur les vagues, nez qui se lève en vitesse. **Purement visuel** : rien côté
-entité, donc rien à synchroniser, pas de changement de protocole, serveur pas concerné.
-- Phase = heure du monde **et** position (`2π(t/période + (x·dx+z·dz)/longueur)`) → champ de vagues :
-  barques voisines accordées, tous les clients d'accord sans réseau. Deux trains (houle 47 ticks /
-  11 blocs, clapot 29 ticks / 6,5 blocs, directions croisées) pondérés à 1 → angles bornés.
-- Amplitude montante avec la vitesse : 0,8° à quai → 3,5° à 12 blocs/s ; **assiette de déjaugeage**
-  en plus, 0 → 3,0° en `f(2−f)` sur 0 → 20 blocs/s. Pilonnement ±0,05 bloc. Tangage max 6,5°.
+## Houle (`Wave` + `MotorboatRenderer.applyWave`, 2026-09-21)
+Étrave qui se lève de temps en temps puis se repose, nez qui se lève en vitesse. **Purement visuel** :
+rien côté entité, rien à synchroniser, serveur pas concerné.
+- **La houle vient par groupes** (correction 2026-09-21, `v0.6.1`). 1re version rejetée par nistroy en
+  jeu : « ça ne fait que trembler ». Cause : deux trains de 47 et 29 ticks **plus** une phase qui
+  avance avec la position → une crête toutes les ~5 ticks à pleine vitesse, et une oscillation
+  permanente de 1,5 s à l'arrêt. Une houle permanente se lit comme une vibration, pas comme la mer.
+- Modèle actuel : **une** vague longue (130 ticks, 80 blocs) × une **enveloppe de groupes** =
+  produit de deux battements lents (430 et 670 ticks, directions croisées) passé au smoothstep
+  `[0,30 ; 0,85]`. Mesuré sur la classe compilée : **eau plate ~72 % du temps**, séries de 5-10 s,
+  pointe 1,6° à l'arrêt / 4,0° à pleine vitesse. Plus on va vite, plus on croise de vagues.
+- Amplitude montante avec la vitesse (1,6° → 4,0° à 12 blocs/s) ; **assiette de déjaugeage** en plus,
+  0 → 3,0° en `f(2−f)` sur 0 → 20 blocs/s. Pilonnement ±0,07 bloc. Tangage max 7°.
 - Petites amplitudes **obligatoires** : les attaches de `SeatPlan` ignorent le tangage, les passagers
   restent debout → 0,08 bloc d'écart au pire au banc d'étrave. Hitbox jamais inclinée (AABB).
+- **Fondu à l'eau, pas un interrupteur** (`afloat()`) : `isInWater()` suit un drapeau qui bascule d'un
+  tick à l'autre sur une coque qui flotte au ras de la surface ; allumer/éteindre la houle 10 fois
+  par seconde se verrait comme un tremblement. On fond sur `getFluidHeight(WATER)` / 0,125 bloc.
 - Pose : `applyWave` se pose dans le repère **du monde**, à l'origine de l'entité (pivot à la
   flottaison) ; elle entre dans le repère coque par le lacet et en ressort. Tangage `Axis.XP` positif
-  = proue qui lève, roulis `Axis.ZP` — vérifié hors jeu en rejouant la chaîne (`applyWave` +
-  `applyBoatPose`) sous JOML : proue +0,078 / poupe −0,079 bloc à +3°, identique à tous les lacets.
+  = proue qui lève, roulis `Axis.ZP` — vérifié hors jeu sous JOML : proue +0,078 / poupe −0,079 bloc
+  à +3°, identique à tous les lacets.
 - Appelée **deux fois par rendu** pour la barque 2 places : sa coque est dessinée par `BoatRenderer`
   (donc `super.render` enveloppé), le moteur passe par `applyBoatPose`. La grande coque n'a rien de
-  spécial, tout passe par `applyBoatPose`. Effet de bord accepté : la plaque de nom de la barque
-  2 places tangue avec la coque (elle est dessinée dans `super.render`), pas celle de la grande.
+  spécial. Effet de bord accepté : la plaque de nom de la barque 2 places tangue avec la coque.
 - Vitesse mesurée sur `getX() − xOld`, pas `getDeltaMovement()` : nul sur les barques des autres
-  joueurs, que le client interpole. Position lue interpolée (`getX(partialTicks)`) — à pleine vitesse
-  la phase avance de ~1 rad/tick, la position du tick seul saccade.
-- Rien hors de l'eau (`isInWater()`, `Boat.getStatus()` n'est pas public — javap 1.21.1).
-- **Reste à faire** : regarder en jeu (`./gradlew runClient`) et régler les amplitudes au goût ; pas
-  de clé de config pour l'instant, tout est en constantes dans `Wave`.
+  joueurs, que le client interpole. Position lue interpolée (`getX(partialTicks)`).
+- **Si un scintillement subsiste** : suspect suivant = le masque d'eau (`waterPatch`), qui s'incline
+  avec la coque et peut battre contre la surface plate. Correctif possible : le dessiner hors houle.
 
 ## Backlog
 - **Choisir sa place** (question nistroy 2026-09-20) : faisable mais pas gratuit — vanilla attribue le

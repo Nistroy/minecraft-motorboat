@@ -24,6 +24,48 @@ class WaveTest {
         });
     }
 
+    /** Le point de la reprise : l'eau est plate la plupart du temps, la houle vient par séries. */
+    @Test
+    void theWaterIsFlatMostOfTheTime() {
+        int calm = 0;
+        int total = 0;
+        for (double t = 0.0; t < 6000.0; t += 1.0) {
+            double x = t * 0.8;
+            double group = Wave.groupStrength(x, 0.0, t);
+            if (group < 0.1) {
+                calm++;
+            }
+            total++;
+        }
+        double share = (double) calm / total;
+        assertTrue(share > 0.55, "eau plate seulement " + Math.round(share * 100) + " % du temps");
+        assertTrue(share < 0.9, "houle trop rare : " + Math.round(share * 100) + " % de calme");
+    }
+
+    /** Une série monte et redescend : pas de plateau permanent, pas de tremblement continu. */
+    @Test
+    void swellComesInSeriesSeparatedByCalm() {
+        int series = 0;
+        boolean inside = false;
+        for (double t = 0.0; t < 6000.0; t += 1.0) {
+            boolean strong = Wave.groupStrength(t * 0.8, 0.0, t) > 0.3;
+            if (strong && !inside) {
+                series++;
+            }
+            inside = strong;
+        }
+        // 5 min de navigation : assez de séries pour que ça vive, assez peu pour que ça se remarque.
+        assertTrue(series >= 8 && series <= 40, "séries sur 5 min : " + series);
+    }
+
+    @Test
+    void groupStrengthStaysWithinZeroAndOne() {
+        forEachSample((x, z, t, ignoredSpeed) -> {
+            double g = Wave.groupStrength(x, z, t);
+            assertTrue(g >= 0.0 && g <= 1.0, "enveloppe hors bornes : " + g);
+        });
+    }
+
     @Test
     void atRestItBarelyMoves() {
         forEachSample((x, z, t, ignoredSpeed) -> {
@@ -34,7 +76,7 @@ class WaveTest {
 
     @Test
     void theFasterItGoesTheMoreItJumps() {
-        assertTrue(peakPitch(TOP_SPEED) > peakPitch(0.0) * 3.0);
+        assertTrue(peakPitch(TOP_SPEED) > peakPitch(0.0) * 1.5);
         assertTrue(Wave.swellDegrees(0.0) < Wave.swellDegrees(0.3));
         assertTrue(Wave.swellDegrees(0.3) < Wave.swellDegrees(TOP_SPEED));
         assertEquals(Wave.REST_SWELL_DEGREES, Wave.swellDegrees(0.0), EPS);
@@ -61,7 +103,7 @@ class WaveTest {
     void boatsSideBySideRideTheSameWave() {
         Wave.Motion mine = Wave.at(120.0, -40.0, 1000.0, 1.2);
         Wave.Motion neighbour = Wave.at(121.5, -40.0, 1000.0, 1.2);
-        assertTrue(Math.abs(mine.pitchDegrees() - neighbour.pitchDegrees()) < 1.5F, "voisines désaccordées");
+        assertTrue(Math.abs(mine.pitchDegrees() - neighbour.pitchDegrees()) < 0.6F, "voisines désaccordées");
     }
 
     /** Une image dure 1/20 de tick au mieux : pas de saut d'angle entre deux images. */
@@ -74,7 +116,7 @@ class WaveTest {
             Wave.Motion before = Wave.at(x, 0.0, t, TOP_SPEED);
             Wave.Motion after = Wave.at(x + step * TOP_SPEED, 0.0, t + step, TOP_SPEED);
             assertTrue(
-                    Math.abs(after.pitchDegrees() - before.pitchDegrees()) < 0.5F,
+                    Math.abs(after.pitchDegrees() - before.pitchDegrees()) < 0.1F,
                     "saut de tangage à t=" + t);
         }
     }

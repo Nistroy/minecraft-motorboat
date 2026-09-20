@@ -19,6 +19,7 @@ import net.minecraft.client.renderer.entity.BoatRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.vehicle.Boat;
 import org.joml.Quaternionf;
@@ -42,6 +43,9 @@ public class MotorboatRenderer extends BoatRenderer {
 
     /** Le double moteur, c'est deux hors-bord de base en travers ; capot de 6 de large, 2 d'écart. */
     private static final float[] DOUBLE_OFFSETS = {-4.0F, 4.0F};
+
+    /** Hauteur d'eau (blocs) au-delà de laquelle la coque est pleinement portée : 2 px suffisent. */
+    private static final double AFLOAT_DEPTH = 0.125;
 
     /** Accrochage sur la barque 2 places : arête haute du tableau arrière vanilla (javap 1.21.1). */
     public static final Mount VANILLA_MOUNT = new Mount(-16.0F, -3.0F);
@@ -209,7 +213,8 @@ public class MotorboatRenderer extends BoatRenderer {
      * <p>Rien hors de l'eau : à terre ou en vol, la coque reste droite.
      */
     public static void applyWave(PoseStack pose, Boat boat, float yaw, float partialTicks) {
-        if (!boat.isInWater()) {
+        float afloat = afloat(boat);
+        if (afloat <= 0.0F) {
             return;
         }
         // Vitesse prise sur le déplacement du dernier tick : getDeltaMovement() vaut ~0 sur les
@@ -220,11 +225,25 @@ public class MotorboatRenderer extends BoatRenderer {
                 boat.getZ(partialTicks),
                 (double) boat.level().getGameTime() + partialTicks,
                 speed);
-        pose.translate(0.0, motion.heaveBlocks(), 0.0);
+        pose.translate(0.0, motion.heaveBlocks() * afloat, 0.0);
         pose.mulPose(Axis.YP.rotationDegrees(180.0F - yaw));
-        pose.mulPose(Axis.XP.rotationDegrees(motion.pitchDegrees()));
-        pose.mulPose(Axis.ZP.rotationDegrees(motion.rollDegrees()));
+        pose.mulPose(Axis.XP.rotationDegrees(motion.pitchDegrees() * afloat));
+        pose.mulPose(Axis.ZP.rotationDegrees(motion.rollDegrees() * afloat));
         pose.mulPose(Axis.YP.rotationDegrees(yaw - 180.0F));
+    }
+
+    /**
+     * À quel point la coque est portée par l'eau, de 0 (à sec) à 1 (à flot). **Un fondu, pas un
+     * interrupteur** : {@code isInWater()} suit un drapeau qui peut basculer d'un tick à l'autre sur
+     * une coque qui flotte au ras de la surface, et une houle qu'on allume et éteint 10 fois par
+     * seconde se voit comme un tremblement. La hauteur d'eau, elle, varie continûment.
+     */
+    private static float afloat(Boat boat) {
+        double submerged = boat.getFluidHeight(FluidTags.WATER);
+        if (boat.isInWater()) {
+            submerged = Math.max(submerged, AFLOAT_DEPTH);
+        }
+        return (float) Mth.clamp(submerged / AFLOAT_DEPTH, 0.0, 1.0);
     }
 
     /**
