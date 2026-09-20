@@ -1,40 +1,69 @@
-# PLAN — v0.3 (état de l'implémentation)
+# PLAN — v0.4 : coque 3D et sprites faits main (état de reprise)
 
-Fichier de reprise : une session qui repart lit **ça** en premier, puis `CLAUDE.md`.
-Branche `feat/motor-tiers`. Mettre à jour les cases à chaque étape verte.
+Fichier de reprise : session qui repart lit **ça** puis `CLAUDE.md`. Mettre à jour à chaque étape verte.
 
-## Demande (validée nistroy 2026-09-20)
-Paliers de moteur, par ordre de vitesse. Réponses aux questions posées :
-1. Montage : **slot moteur dans la soute** (pas d'échange au clic droit, pas d'item de barque par moteur).
-2. Vitesses : 16 / 24 / 32 blocs/s, grande coque −15 % — **mais la barque 2 places n'accepte que le
-   moteur basique**.
-3. Plafond de vitesse de la config : **supprimé**.
+## État au 2026-09-20
+- `v0.3.1` publiée, **déployée partout** : `server/mods/` du dépôt `minecraft-server` + pack packwiz `main`
+  (`pack/mods/motorboat.pw.toml`). Test en jeu par nistroy : OK (« tout marche super bien »).
+- Contenu v0.3.x : soute (réservoir + slot moteur + coffre 27), grande barque 6 places, 3 moteurs
+  (`motor` 16 / `big_motor` 24 / `double_motor` 32 blocs/s, grande coque ×0,85), recettes à forme fixe,
+  config sans plafond de vitesse.
 
-Conséquence assumée : coque craftée sans moteur (bateau + 2 fer), sinon casser la barque rendrait
-coque + moteur = moteur gratuit à chaque cycle.
+## Demande (nistroy 2026-09-20)
+Coque de la grande barque jugée trop « radeau » (caisse : fond plat + 4 parois droites). **nistroy
+modélise dans Blockbench et refait les sprites d'items ; l'agent recâble, ne crée pas l'art.**
 
-## Fait
-- [x] `MotorTier` (pur, TDD) : NONE/BASIC/BIG/DOUBLE, `fitsHull`, `byId`.
-- [x] `MotorboatConfig` : 4 clés, pas de plafond, reprise de l'ancienne `topSpeedBlocksPerSecond`.
-- [x] Slot moteur (conteneur 29, slot 28), `DATA_MOTOR` synchronisé, poussée et conso par palier.
-- [x] `MotorSlot` dans le menu (refuse ce qui ne tient pas sur la coque, 1 objet max), `quickMoveStack`.
-- [x] Items `big_motor` / `double_motor` + `TooltipItem`, sprites, modèles, lang FR/EN, recettes.
-- [x] Recette de coque sans moteur (bateau + 2 lingots de fer).
-- [x] Rendu par palier : rien / bloc / bloc × 1,35 / deux blocs.
-- [x] Docs (`README.md`, `CLAUDE.md`), version `0.3.0`.
+Livrables attendus de nistroy : `.bbmodel` (projet, pas un export), PNG de texture de coque, sprites
+d'items 16×16. Transfert : branche `art/coque` du dépôt (upload web GitHub) ou pièce jointe Discord.
 
-## Reste
-- [ ] **Test en jeu par nistroy** (v0.2 jamais taguée : son test reste à faire aussi) : rendu des trois
-      moteurs, refus du gros moteur sur la petite coque, vitesse de chaque palier, six places, soute.
-- [ ] Après feu vert : tag `v0.3.0` → release → `pack/mods/motorboat.pw.toml` du dépôt
-      `minecraft-server` (touche les joueurs : demander avant).
+## Contraintes données à nistroy (ne pas les contredire)
+- 1 unité Blockbench = 1 px Minecraft = 1/16 bloc ; modéliser **Y vers le haut**, l'agent gère l'inversion.
+- Encombrement ≤ 36 × 36 unités au sol (hitbox `sized(2.25F, 0.5625F)`, **carrée en X/Z**) ; hauteur libre.
+- Coque actuelle : 36 long × 28 large × 7 haut, fond 1 d'épaisseur ; texture `256 × 128`.
+- Plan d'eau (masque) et six sièges : **en code**, nistroy ne les modélise pas. Bancs éventuels → aligner
+  les sièges dessus.
+- Bloc moteur refaisable aussi : 4×7×5 + échappement 2×4×2, texture `32 × 32`.
 
-## Vérifié le 2026-09-20 (RCON sur `runServer`)
-Démarrage propre (`Done (`), 1295 recettes chargées, `summon` des 2 entités, items `big_motor` /
-`double_motor` existants, `data merge` du slot 28, conso auto **seulement** moteur posé (2 charbons → 1,
-réserve 0 → 1600 ; sans moteur : réserve 0, charbons intacts), config par défaut réécrite aux 4 clés.
-Piège : sans joueur les entités ne tiquent pas → `forceload add 0 0` avant toute mesure.
+## Repères techniques (relevés au javap 1.21.1, ne pas re-deviner)
+- Repère après `MotorboatRenderer.applyBoatPose` : **+X = proue**, **−Y = haut** (`scale(-1, -1, 1)`),
+  d'où les parois actuelles de `y = -6` à `y = 0`.
+- Sièges : `BigMotorboatEntity.ROW_OFFSETS = {0.7, 0.0, -0.7}` (Z, proue = +Z dans
+  `getPassengerAttachmentPoint`), `SEAT_OFFSET = 0.4` (X en travers). Attache =
+  `new Vec3(travers, hauteur, avant).yRot(-yRot)`.
+- Rendu du moteur par palier (`MotorboatRenderer.renderEngine`) : BASIC = bloc, BIG = ×1,35 autour de
+  `(-11, 1)`, DOUBLE = deux blocs à `±3` en Z. Recalculer ces nombres si le bloc moteur change.
+
+## Étapes quand l'art arrive
+- [ ] 1. Récupérer les fichiers (branche `art/coque` ou Discord), les lire avant de coder.
+- [ ] 2. `.bbmodel` → `BigMotorboatModel.createBodyModel()` : cubes `from`/`to`/`origin`/`rotation`/`uv`,
+      attention `inflate` et pivots ; convertir Y-up Blockbench vers le repère du mod.
+- [ ] 3. Textures en place (`assets/motorboat/textures/entity/`, `.../item/`) ; ajuster
+      `TEXTURE_WIDTH`/`TEXTURE_HEIGHT` si nistroy a changé la taille.
+- [ ] 4. **Retirer de `tools/generate_textures.py`** les fonctions des fichiers faits main (sinon le
+      script les écrase) + mettre à jour son en-tête et la carte de `CLAUDE.md`.
+- [ ] 5. Sièges et `sized()` réajustés si les proportions changent.
+- [ ] 6. `./gradlew build` vert **et** `./gradlew runClient` (le rendu ne se vérifie pas autrement).
+- [ ] 7. Version `0.4.0`, PR, merge, tag `v0.4.0` → release (workflow : tag = `version` de
+      `gradle.properties`, sinon il échoue).
+- [ ] 8. Déploiement, **les deux ensemble** : `server/mods/` du dépôt serveur + `pack/mods/motorboat.pw.toml`
+      (url + sha256 de la release, puis `~/go/bin/packwiz refresh`). Avant : sauvegarde hors rotation
+      (`./mc cmd save-off` → `save-all flush` → `./mc backup` → `save-on`, puis renommer `pre-<change>_…`).
+      Serveur : `./mc stop`/`start` sans demander si 0 joueur.
+
+## Pièges vérifiés en vrai
+- **Client et serveur doivent avoir la même version** : client 0.3.0 sur serveur 0.1.1 → Fabric remappe les
+  registres, la connexion passe mais les items pris en créatif deviennent ceux d'autres mods
+  (`item.universal_graves.icon`), crafts des nouveaux items KO, menus custom muets (2026-09-20).
+- RCON sur `runServer` : sans joueur, les entités ne tiquent pas dans les chunks de spawn →
+  `forceload add 0 0` avant toute mesure, sinon `Fuel` reste à 0 et on croit à un bug.
+- Dépôt `minecraft-server` : checkout live, **jamais** changer sa branche → worktree + `merge --ff-only`.
+
+## Reste en attente (hors art)
+- Supprimer la branche `test/motorboat-0-3-0` (dépôt serveur) et la pré-version `test-0.3.0-rc1` quand
+  nistroy confirme que son hook Prism est revenu sur `main`.
+- Garder le bois du bateau utilisé au craft (aujourd'hui : coque chêne quel que soit le bateau).
+- **Jamais** : pont praticable en mouvement (écarté par nistroy).
 
 ## Vérifications
 - `JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home ./gradlew build`
-- Rendu et menus : `./gradlew runClient` (obligatoire pour le slot moteur et les trois blocs moteur).
+- Rendu : `./gradlew runClient` — obligatoire pour toute étape qui touche au modèle ou aux textures.
