@@ -1,24 +1,38 @@
 package io.github.nistroy.motorboat;
 
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
+import net.minecraft.core.NonNullList;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
+import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.HasCustomInventoryScreen;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.SlotAccess;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.vehicle.Boat;
+import net.minecraft.world.entity.vehicle.ContainerEntity;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
+import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Bateau vanilla plus un moteur à combustible de four.
@@ -28,7 +42,18 @@ import net.minecraft.world.phys.Vec3;
  * appliquée côté client, et la consommation côté serveur, qui fait autorité sur la réserve et la
  * synchronise via {@link #DATA_FUEL}.
  */
-public class MotorboatEntity extends Boat {
+public class MotorboatEntity extends Boat
+        implements HasCustomInventoryScreen, ContainerEntity, ExtendedScreenHandlerFactory<Integer> {
+    /** Slot du réservoir : le moteur y pioche tout seul. */
+    public static final int FUEL_SLOT = 0;
+
+    public static final int FIRST_STORAGE_SLOT = 1;
+
+    /** Coffre de rangement, 3 rangées de 9 comme un coffre simple. */
+    public static final int STORAGE_SLOTS = 27;
+
+    public static final int CONTAINER_SIZE = FIRST_STORAGE_SLOT + STORAGE_SLOTS;
+
     private static final EntityDataAccessor<Integer> DATA_FUEL =
             SynchedEntityData.defineId(MotorboatEntity.class, EntityDataSerializers.INT);
 
@@ -39,6 +64,13 @@ public class MotorboatEntity extends Boat {
 
     /** Vitesse² au-delà de laquelle le moteur se voit et s'entend (~1,3 bloc/s) : à quai, il se tait. */
     private static final double EFFECTS_SPEED_SQR = 0.004;
+
+    private NonNullList<ItemStack> items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);
+
+    @Nullable
+    private ResourceKey<LootTable> lootTable;
+
+    private long lootTableSeed;
 
     /** Saisie « en avant » du pilote. Remplie côté client seulement (voir {@link #setInput}). */
     private boolean throttle;
@@ -88,6 +120,9 @@ public class MotorboatEntity extends Boat {
                 engineEffects();
             }
         } else {
+            if (!Motor.running(fuel())) {
+                refuelFromTank();
+            }
             setFuel(Motor.burn(fuel(), driverPushingForward()));
         }
         super.tick();
@@ -119,12 +154,24 @@ public class MotorboatEntity extends Boat {
         }
     }
 
-    /** Accroupi + clic droit avec un combustible de four : plein. Sinon, comportement du bateau vanilla. */
+    /**
+     * Accroupi + clic droit : plein direct avec un combustible de four en main, interface de la barque
+     * à main vide. Sans s'accroupir, comportement du bateau vanilla (on embarque).
+     */
     @Override
     public InteractionResult interact(Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
-        int burnTicks = AbstractFurnaceBlockEntity.getFuel().getOrDefault(stack.getItem(), 0);
-        if (!player.isSecondaryUseActive() || burnTicks <= 0) {
+        if (!player.isSecondaryUseActive()) {
+            return super.interact(player, hand);
+        }
+        if (stack.isEmpty()) {
+            if (!level().isClientSide) {
+                openCustomInventoryScreen(player);
+            }
+            return InteractionResult.sidedSuccess(level().isClientSide);
+        }
+        int burnTicks = fuelValue(stack);
+        if (burnTicks <= 0) {
             return super.interact(player, hand);
         }
         int loaded = Motor.load(fuel(), burnTicks);
@@ -141,6 +188,143 @@ public class MotorboatEntity extends Boat {
         return InteractionResult.sidedSuccess(level().isClientSide);
     }
 
+    /** Durée de combustion d'un objet dans un four, 0 s'il ne brûle pas. */
+    private static int fuelValue(ItemStack stack) {
+        return AbstractFurnaceBlockEntity.getFuel().getOrDefault(stack.getItem(), 0);
+    }
+
+    /**
+     * Consomme un combustible du slot réservoir quand le moteur est à sec. Serveur uniquement.
+     * Le contenant d'un combustible qui en a un (seau de lave → seau vide) reste dans le slot, comme
+     * dans un four.
+     */
+    private void refuelFromTank() {
+        ItemStack stack = items.get(FUEL_SLOT);
+        int loaded = Motor.autoLoad(fuel(), fuelValue(stack));
+        if (loaded == Motor.REFUSED) {
+            return;
+        }
+        setFuel(loaded);
+        Item remainder = stack.getItem().hasCraftingRemainingItem() ? stack.getItem().getCraftingRemainingItem() : null;
+        stack.shrink(1);
+        if (stack.isEmpty() && remainder != null) {
+            items.set(FUEL_SLOT, new ItemStack(remainder));
+        }
+        level().playSound(null, this, SoundEvents.FURNACE_FIRE_CRACKLE, getSoundSource(), 0.6F, 1.0F);
+    }
+
+    @Override
+    public void openCustomInventoryScreen(Player player) {
+        player.openMenu(this);
+        if (player.level() instanceof net.minecraft.server.level.ServerLevel) {
+            gameEvent(GameEvent.CONTAINER_OPEN, player);
+        }
+    }
+
+    @Override
+    public Integer getScreenOpeningData(ServerPlayer player) {
+        return getId();
+    }
+
+    @Override
+    public AbstractContainerMenu createMenu(int syncId, Inventory playerInventory, Player player) {
+        if (lootTable != null && player.isSpectator()) {
+            return null;
+        }
+        unpackChestVehicleLootTable(playerInventory.player);
+        return new MotorboatMenu(syncId, playerInventory, this);
+    }
+
+    // --- Conteneur (délégué aux défauts de ContainerEntity, comme ChestBoat) ---
+
+    @Override
+    public int getContainerSize() {
+        return CONTAINER_SIZE;
+    }
+
+    @Override
+    public NonNullList<ItemStack> getItemStacks() {
+        return items;
+    }
+
+    @Override
+    public void clearItemStacks() {
+        items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);
+    }
+
+    @Override
+    public void clearContent() {
+        clearChestVehicleContent();
+    }
+
+    @Override
+    public ItemStack getItem(int slot) {
+        return getChestVehicleItem(slot);
+    }
+
+    @Override
+    public ItemStack removeItem(int slot, int count) {
+        return removeChestVehicleItem(slot, count);
+    }
+
+    @Override
+    public ItemStack removeItemNoUpdate(int slot) {
+        return removeChestVehicleItemNoUpdate(slot);
+    }
+
+    @Override
+    public void setItem(int slot, ItemStack stack) {
+        setChestVehicleItem(slot, stack);
+    }
+
+    @Override
+    public SlotAccess getSlot(int slot) {
+        return getChestVehicleSlot(slot);
+    }
+
+    @Override
+    public void setChanged() {}
+
+    @Override
+    public boolean stillValid(Player player) {
+        return isChestVehicleStillValid(player);
+    }
+
+    @Override
+    public void remove(RemovalReason reason) {
+        if (!level().isClientSide && reason.shouldDestroy()) {
+            Containers.dropContents(level(), this, this);
+        }
+        super.remove(reason);
+    }
+
+    @Override
+    public void destroy(DamageSource source) {
+        super.destroy(source);
+        chestVehicleDestroyed(source, level(), this);
+    }
+
+    @Nullable
+    @Override
+    public ResourceKey<LootTable> getLootTable() {
+        return lootTable;
+    }
+
+    @Override
+    public void setLootTable(@Nullable ResourceKey<LootTable> table) {
+        lootTable = table;
+    }
+
+    @Override
+    public long getLootTableSeed() {
+        return lootTableSeed;
+    }
+
+    @Override
+    public void setLootTableSeed(long seed) {
+        lootTableSeed = seed;
+    }
+
     @Override
     public Item getDropItem() {
         return Motorboat.MOTORBOAT_ITEM;
@@ -155,11 +339,13 @@ public class MotorboatEntity extends Boat {
     protected void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
         tag.putInt(FUEL_TAG, fuel());
+        addChestVehicleSaveData(tag, registryAccess());
     }
 
     @Override
     protected void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
         setFuel(Motor.clamp(tag.getInt(FUEL_TAG)));
+        readChestVehicleSaveData(tag, registryAccess());
     }
 }

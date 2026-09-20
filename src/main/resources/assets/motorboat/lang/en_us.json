@@ -4,5 +4,8 @@
 	"entity.motorboat.motorboat": "Motorboat",
 	"motorboat.message.fuel": "Tank: %s s of running time",
 	"motorboat.message.tank_full": "Tank full",
-	"motorboat.tooltip.motorboat": "Sneak + right-click with fuel to refuel"
+	"motorboat.tooltip.motorboat": "Sneak + right-click for the hold; with fuel in hand, refuels",
+	"item.motorboat.big_motorboat": "Big Motorboat",
+	"entity.motorboat.big_motorboat": "Big Motorboat",
+	"motorboat.tooltip.big_motorboat": "Six seats - sneak + right-click to open the hold"
 }

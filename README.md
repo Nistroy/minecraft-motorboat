@@ -1,7 +1,8 @@
 # minecraft-motorboat
 
 Une barque à moteur pour serveur **Fabric 1.21.1** : le bateau vanilla, plus un moteur qui brûle du
-charbon et qui va deux fois plus vite tant qu'il a de quoi brûler.
+charbon et qui va deux fois plus vite tant qu'il a de quoi brûler. Avec sa soute pour le carburant,
+et une grande version à six places.
 
 Mod maison écrit pour le serveur entre copains — aucun mod de bateau existant en 1.21.1 ne faisait
 l'affaire (voir `MODS.md` §4 et §8 du dépôt `minecraft-server`).
@@ -17,13 +18,32 @@ l'affaire (voir `MODS.md` §4 et §8 du dépôt `minecraft-server`).
    ```
 
 2. **Craft de la barque** : le moteur + n'importe quel bateau (recette sans forme).
-3. **Le plein** : **accroupi + clic droit** sur la barque avec n'importe quel combustible de four
-   (charbon, bûches, blaze rod…). Le message en bas de l'écran donne l'autonomie restante en secondes.
-   Réservoir plein : 10 minutes de marche, soit 7 charbons et demi.
-4. **Conduite** : comme un bateau. Tant qu'il reste du carburant et qu'on avance, le moteur pousse
-   (16 blocs/s au lieu de 8), fume et fait des bulles. À sec, la barque redevient un bateau à rames.
+3. **Craft de la grande barque** : une barque à moteur entourée de 7 planches. Six places, trois rangs
+   de deux, même moteur.
 
-Le carburant ne se consomme que quand on avance : une barque à l'arrêt ne brûle rien.
+   ```
+   P P      P = planches (n'importe lesquelles)
+   PBP      B = barque à moteur
+   PPP
+   ```
+
+4. **Le plein**, au choix :
+   - **accroupi + clic droit** avec un combustible de four en main (charbon, bûches, blaze rod…) :
+     plein immédiat, le message en bas de l'écran donne l'autonomie restante ;
+   - **accroupi + clic droit à main vide** : la soute s'ouvre. Le slot en haut à gauche est le
+     réservoir — le moteur y pioche tout seul dès qu'il est à sec, et la flamme à côté montre ce qu'il
+     reste. Les 27 slots du dessous sont un coffre ordinaire, pratique en expédition.
+
+   Réservoir plein : 10 minutes de marche, soit 7 charbons et demi. Un combustible plus gros que le
+   réservoir (seau de lave) n'est pas gâché à moitié : il remplit à ras bord et rend son seau.
+
+5. **Conduite** : comme un bateau. Tant qu'il reste du carburant et qu'on avance, le moteur pousse
+   (16 blocs/s au lieu de 8), fume et fait des bulles. À sec, la barque redevient un bateau à rames.
+   La grande barque va aussi vite que la petite, mais sa coque de 2,25 blocs passe mal dans les
+   rivières étroites et sous les ponts bas.
+
+Le carburant ne se consomme que quand on avance : une barque à l'arrêt ne brûle rien. Casser une
+barque rend son contenu, comme un bateau à coffre.
 
 ## Installation
 

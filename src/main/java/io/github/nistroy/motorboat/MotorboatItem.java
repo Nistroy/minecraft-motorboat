@@ -19,13 +19,25 @@ import net.minecraft.world.phys.Vec3;
 
 /** Pose la barque là où le joueur vise, comme {@code BoatItem} (eau incluse : {@code Fluid.ANY}). */
 public class MotorboatItem extends Item {
-    public MotorboatItem(Properties properties) {
+    /** Constructeur de la barque posée : une taille de coque par type d'item. */
+    @FunctionalInterface
+    public interface BoatFactory {
+        MotorboatEntity create(Level level, double x, double y, double z);
+    }
+
+    private final BoatFactory factory;
+
+    private final String tooltipKey;
+
+    public MotorboatItem(Properties properties, BoatFactory factory, String tooltipKey) {
         super(properties);
+        this.factory = factory;
+        this.tooltipKey = tooltipKey;
     }
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.translatable("motorboat.tooltip.motorboat").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable(tooltipKey).withStyle(ChatFormatting.GRAY));
     }
 
     @Override
@@ -36,7 +48,7 @@ public class MotorboatItem extends Item {
             return InteractionResultHolder.pass(stack);
         }
         Vec3 where = hit.getLocation();
-        MotorboatEntity boat = new MotorboatEntity(level, where.x, where.y, where.z);
+        MotorboatEntity boat = factory.create(level, where.x, where.y, where.z);
         boat.setYRot(player.getYRot());
         if (!level.noCollision(boat, boat.getBoundingBox())) {
             return InteractionResultHolder.fail(stack);
