@@ -177,6 +177,60 @@ def engine_texture():
     image.save(ASSETS / "entity/motor.png")
 
 
+# Boîtes de BigMotorboatModel.createBodyModel() : (texOffs u, v, dx, dy, dz).
+BIG_HULL_BOXES = {
+    "bottom": (0, 0, 36, 1, 28),
+    "port": (0, 32, 36, 6, 1),
+    "starboard": (0, 40, 36, 6, 1),
+    "bow": (0, 48, 1, 6, 26),
+    "stern": (64, 48, 1, 6, 26),
+}
+
+WOOD_LIGHT = (162, 128, 84, 255)
+
+
+def planks(image, x, y, w, h):
+    """Remplit une face de planches : veinures claires, joints sombres tous les 4 px."""
+    image.rect(x, y, w, h, WOOD)
+    for row in range(y, y + h):
+        if (row - y) % 4 == 3:
+            image.rect(x, row, w, 1, WOOD_DARK)
+        elif (row - y) % 4 == 0:
+            image.rect(x, row, w, 1, WOOD_LIGHT)
+    image.rect(x, y, 1, h, WOOD_DARK)
+    image.rect(x + w - 1, y, 1, h, WOOD_DARK)
+
+
+def big_hull_texture():
+    image = Image(256, 128)
+    for u, v, dx, dy, dz in BIG_HULL_BOXES.values():
+        for x, y, w, h in box_faces(u, v, dx, dy, dz).values():
+            planks(image, x, y, w, h)
+    # Plan d'eau : rendu en masque, jamais vu, mais on ne laisse pas de trou dans l'atlas.
+    image.rect(128, 0, 34, 26, WOOD_DARK)
+    image.save(ASSETS / "entity/big_motorboat.png")
+
+
+def big_motorboat_item():
+    image = Image(16, 16)
+    # Coque longue vue de trois quarts, moteur à la poupe (à gauche).
+    image.rect(0, 7, 16, 7, OUTLINE)
+    image.rect(1, 8, 14, 5, WOOD)
+    image.rect(1, 8, 14, 1, WOOD_LIGHT)
+    image.rect(1, 11, 14, 2, WOOD_DARK)
+    image.rect(2, 13, 12, 1, WOOD_DARK)
+    # Trois bancs.
+    for x in (4, 7, 10):
+        image.rect(x, 9, 2, 2, WOOD_DARK)
+    image.rect(0, 2, 5, 6, OUTLINE)
+    image.rect(1, 3, 3, 4, IRON)
+    image.rect(1, 3, 3, 1, IRON_LIGHT)
+    image.rect(1, 5, 3, 1, COPPER)
+    image.rect(2, 0, 3, 3, OUTLINE)
+    image.rect(3, 0, 1, 2, PIPE)
+    image.save(ASSETS / "item/big_motorboat.png")
+
+
 def motor_item():
     image = Image(16, 16)
     image.rect(6, 1, 4, 4, OUTLINE)
@@ -216,6 +270,8 @@ def motorboat_item():
 if __name__ == "__main__":
     gui_texture()
     engine_texture()
+    big_hull_texture()
     motor_item()
     motorboat_item()
+    big_motorboat_item()
     print("textures générées dans", ASSETS)

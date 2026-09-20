@@ -39,10 +39,31 @@ public final class Motorboat implements ModInitializer {
                     .clientTrackingRange(10)
                     .build("motorboat"));
 
+    /**
+     * Coque plus longue : boîte de collision élargie en conséquence (elle est carrée en X/Z côté
+     * Minecraft, donc c'est la longueur de la coque qui commande).
+     */
+    public static final EntityType<BigMotorboatEntity> BIG_MOTORBOAT_ENTITY = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            id("big_motorboat"),
+            EntityType.Builder.<BigMotorboatEntity>of(BigMotorboatEntity::new, MobCategory.MISC)
+                    .sized(2.25F, 0.5625F)
+                    .clientTrackingRange(10)
+                    .build("big_motorboat"));
+
     public static final Item MOTOR = Registry.register(BuiltInRegistries.ITEM, id("motor"), new Item(new Item.Properties()));
 
     public static final Item MOTORBOAT_ITEM = Registry.register(
-            BuiltInRegistries.ITEM, id("motorboat"), new MotorboatItem(new Item.Properties().stacksTo(1)));
+            BuiltInRegistries.ITEM,
+            id("motorboat"),
+            new MotorboatItem(
+                    new Item.Properties().stacksTo(1), MotorboatEntity::new, "motorboat.tooltip.motorboat"));
+
+    public static final Item BIG_MOTORBOAT_ITEM = Registry.register(
+            BuiltInRegistries.ITEM,
+            id("big_motorboat"),
+            new MotorboatItem(
+                    new Item.Properties().stacksTo(1), BigMotorboatEntity::new, "motorboat.tooltip.big_motorboat"));
 
     /**
      * Menu de la barque. {@code MenuType.<init>} est privé côté Minecraft : on passe par le type
@@ -79,6 +100,7 @@ public final class Motorboat implements ModInitializer {
         ItemGroupEvents.modifyEntriesEvent(TOOLS_AND_UTILITIES).register(entries -> {
             entries.accept(MOTOR);
             entries.accept(MOTORBOAT_ITEM);
+            entries.accept(BIG_MOTORBOAT_ITEM);
         });
     }
 }

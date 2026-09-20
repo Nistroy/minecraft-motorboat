@@ -4,5 +4,8 @@
 	"entity.motorboat.motorboat": "Barque à moteur",
 	"motorboat.message.fuel": "Réservoir : %s s de marche",
 	"motorboat.message.tank_full": "Réservoir plein",
-	"motorboat.tooltip.motorboat": "Accroupi + clic droit avec un combustible pour faire le plein"
+	"motorboat.tooltip.motorboat": "Accroupi + clic droit : soute ; avec un combustible, plein direct",
+	"item.motorboat.big_motorboat": "Grande barque à moteur",
+	"entity.motorboat.big_motorboat": "Grande barque à moteur",
+	"motorboat.tooltip.big_motorboat": "Six places · accroupi + clic droit pour ouvrir la soute"
 }

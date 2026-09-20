@@ -37,8 +37,8 @@ Ouverture du menu : accroupi + clic droit **à main vide** (accroupi + combustib
 - [x] 3. `MotorboatMenu` + enregistrement `ExtendedScreenHandlerType`, ouverture au clic droit accroupi
       main vide, `quickMoveStack`.
 - [x] 4. `MotorboatScreen` + texture de GUI générée (176×190, jauge de flamme), lang FR/EN.
-- [ ] 5. Grande barque : entité 6 places, hitbox, points d'attache, item, recette, lang.
-- [ ] 6. Modèle + rendu de la grande coque (mesh custom + texture générée) + moteur à la poupe.
+- [x] 5. Grande barque : entité 6 places, hitbox, points d'attache, item, recette, lang.
+- [x] 6. Modèle + rendu de la grande coque (mesh custom + texture générée) + moteur à la poupe.
 - [ ] 7. Docs (`README.md`, `CLAUDE.md` §Suite), version `0.2.0`, PR, merge, tag, pack packwiz du serveur.
 
 ## Vérifications

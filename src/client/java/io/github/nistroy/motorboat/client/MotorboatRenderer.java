@@ -58,6 +58,18 @@ public class MotorboatRenderer extends BoatRenderer {
     public void render(Boat boat, float yaw, float partialTicks, PoseStack pose, MultiBufferSource buffers, int light) {
         super.render(boat, yaw, partialTicks, pose, buffers, light);
         pose.pushPose();
+        applyBoatPose(pose, boat, yaw, partialTicks);
+        renderEngine(engine, pose, buffers, light);
+        pose.popPose();
+    }
+
+    /**
+     * Repère du modèle de bateau : reprend, dans l'ordre, les transformations de
+     * {@code BoatRenderer.render} (relevées au javap sur 1.21.1), secousse de dégâts et colonne à
+     * bulles comprises. Partagé avec la grande barque pour que les deux coques et le moteur restent
+     * alignés.
+     */
+    public static void applyBoatPose(PoseStack pose, Boat boat, float yaw, float partialTicks) {
         pose.translate(0.0F, 0.375F, 0.0F);
         pose.mulPose(Axis.YP.rotationDegrees(180.0F - yaw));
         float hurtTime = (float) boat.getHurtTime() - partialTicks;
@@ -71,7 +83,11 @@ public class MotorboatRenderer extends BoatRenderer {
         }
         pose.scale(-1.0F, -1.0F, 1.0F);
         pose.mulPose(Axis.YP.rotationDegrees(90.0F));
-        engine.render(pose, buffers.getBuffer(RenderType.entityCutoutNoCull(ENGINE_TEXTURE)), light, OverlayTexture.NO_OVERLAY);
-        pose.popPose();
+    }
+
+    /** Dessine le bloc moteur, dans le repère posé par {@link #applyBoatPose}. */
+    public static void renderEngine(ModelPart engine, PoseStack pose, MultiBufferSource buffers, int light) {
+        engine.render(
+                pose, buffers.getBuffer(RenderType.entityCutoutNoCull(ENGINE_TEXTURE)), light, OverlayTexture.NO_OVERLAY);
     }
 }
