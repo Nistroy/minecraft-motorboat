@@ -1,0 +1,8 @@
+{
+	"item.motorboat.motor": "Moteur",
+	"item.motorboat.motorboat": "Barque à moteur",
+	"entity.motorboat.motorboat": "Barque à moteur",
+	"motorboat.message.fuel": "Réservoir : %s s de marche",
+	"motorboat.message.tank_full": "Réservoir plein",
+	"motorboat.tooltip.motorboat": "Accroupi + clic droit avec un combustible pour faire le plein"
+}
