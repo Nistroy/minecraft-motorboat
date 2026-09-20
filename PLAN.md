@@ -155,6 +155,22 @@ le premier monté pilote.
   c'est le seul admis sur la barque 2 places (`MotorTier.fitsHull`) ; gros et double ne s'affichent que
   sur la grande coque. Même montage que la coque : `.bbmodel` dans `tools/art/`, texture générée.
 
+- **Saut et figures** (idée nistroy 2026-09-20, visée 0.5) : espace en pilotant → impulsion Y (~0,6 →
+  ~2,5 blocs, ~1 s en l'air ; `floatBoat` amortit le Y de 0,75 sous la ligne d'eau, puis balistique,
+  gravité −0,04/tick, friction sur x/z seulement — javap 1.21.1). Direction tenue au décollage =
+  figure **purement visuelle** dans `applyBoatPose` : gauche/droite tonneau (axe Z), avant/arrière
+  salto (axe X), rien saut simple ; 360° sur la durée du vol, donc retombe à plat. La hitbox ne tourne
+  jamais (AABB alignées) et les passagers restent dessinés debout. Pilotage en l'air déjà acquis :
+  `controlBoat` n'est gardé que par `isVehicle()`, pas par le statut. Coût : bouffée de carburant +
+  cooldown (~3 s) qui **ne démarre qu'à l'amerrissage** (pas d'enchaînement en l'air), compteur
+  serveur synchronisé comme `Fuel` → le client prédit et affiche ; son + actionbar quand c'est prêt,
+  message de refus si trop tôt. **Piège** : `checkFallDamage` tue le bateau au-delà de 3 blocs de
+  chute hors de l'eau, et `remove()` vide la soute par terre → avaler la distance de chute tant que la
+  figure est en cours. Plomberie : touche lue côté client (espace ne fait rien en bateau), impulsion
+  appliquée par le client du pilote (il fait autorité sur la position), payload vers le serveur qui
+  valide le cooldown et rediffuse la figure pour l'animation des autres clients ; logique pure testée
+  dans `Trick.java`.
+
 ## Reste en attente (hors art)
 - Supprimer la branche `test/motorboat-0-3-0` (dépôt serveur) et la pré-version `test-0.3.0-rc1` quand
   nistroy confirme que son hook Prism est revenu sur `main`.
