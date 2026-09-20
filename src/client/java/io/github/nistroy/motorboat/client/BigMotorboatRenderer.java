@@ -27,10 +27,10 @@ public class BigMotorboatRenderer extends EntityRenderer<Boat> {
 
     /**
      * Accrochage du moteur sur la grande coque : arête haute du tableau arrière, face extérieure —
-     * x = −21 (bordé), y = −8 (dessus de la banquette de poupe, {@code y_bb} 9). Le hors-bord pend
+     * x = −24 (bordé), y = −8 (dessus de la banquette de poupe, {@code y_bb} 9). Le hors-bord pend
      * donc derrière le tableau, dans le dos du pilote, barre franche vers l'avant.
      */
-    private static final MotorboatRenderer.Mount MOUNT = new MotorboatRenderer.Mount(-21.0F, -8.0F);
+    private static final MotorboatRenderer.Mount MOUNT = new MotorboatRenderer.Mount(-24.0F, -8.0F);
 
     private final BigMotorboatModel model;
 

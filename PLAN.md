@@ -32,9 +32,10 @@ modélise dans Blockbench et refait les sprites d'items ; l'agent recâble, ne c
 
 ## Contraintes données à nistroy (ne pas les contredire)
 - 1 unité Blockbench = 1 px Minecraft = 1/16 bloc ; modéliser **Y vers le haut**, l'agent gère l'inversion.
-- Hitbox `sized(2.25F, 0.5625F)` (36 px, **carrée en X/Z**), **inchangée** : le modèle a le droit de
-  déborder, vanilla le fait déjà (coque de 28 px dans une hitbox de 22, relevé au javap 1.21.1).
-  Débord actuel 42 px = +17 %, vanilla +27 %. Largeur : rester ≤ 28 px, sinon on cogne les berges.
+- Hitbox `sized(2.5F, 0.5625F)` (40 px, **carrée en X/Z**), passée de 2,25 à 2,5 avec l'allongement
+  (nistroy 2026-09-20). Le modèle a le droit de déborder, vanilla le fait déjà (coque de 28 px dans
+  une hitbox de 22, javap 1.21.1) : 48 px pour 40 = +20 %, vanilla +27 %. Largeur : rester ≤ 28 px,
+  sinon on cogne les berges.
 - Coque v0.3 (celle qu'on remplace) : 36 long × 28 large × 7 haut, fond 1 d'épaisseur ; texture `256 × 128`.
 - Plan d'eau (masque) et six sièges : **en code**, nistroy ne les modélise pas. Bancs éventuels → aligner
   les sièges dessus.
@@ -46,15 +47,16 @@ modélise dans Blockbench et refait les sprites d'items ; l'agent recâble, ne c
 23 cubes, `box_uv` dans `256 × 128` (empreintes packées sans recouvrement, vérifié), **texture
 embarquée en base64** → le fichier s'ouvre déjà habillé, rien à importer ; `relative_path` pointe
 `src/main/resources/assets/motorboat/textures/entity/big_motorboat.png` pour le réenregistrement.
-Encombrement **42 × 28 × 10** (x ±21, z ±14, y 0→10), rotations comprises. Allongée de 36 à 42 à la
-demande de nistroy (2026-09-20) pour loger le poste de barre.
+Encombrement **48 × 28 × 10** (x ±24, z ±14, y 0→10), rotations comprises. Allongée deux fois à la demande de nistroy
+(2026-09-20) : 36 → 42 pour loger le poste de barre, puis 42 → 48 pour que les six places retrouvent
+l'écart de vanilla.
 - Groupe `coque` : fond (+ 5 marches d'étrave), bordés 2 d'épaisseur × 6 de haut, tableau arrière,
   listons (débord 0,5 vers l'intérieur), `banquette_poupe`, pont avant, étrave, 3 bancs.
-- `banquette_poupe` (x −21→−17, y 7→9, z ±11,5) : liston de poupe élargi et épaissi, **le pilote
+- `banquette_poupe` (x −24→−20, y 7→9, z ±11,5) : liston de poupe élargi et épaissi, **le pilote
   s'assoit dessus** (nistroy 2026-09-20, « comme quelqu'un qui se pose dessus pour manœuvrer »).
   Dépasse d'1 px les listons de bord, d'où une banquette qui se lit.
-- Groupes `proue_bd`/`proue_td` : bordé + liston inclinés, pivot `(11, 1, ±13)`, rotation Y `±51,953°`,
-  longueur 14,6 → pointe à `(20, ±1,5)`. **Une rotation par groupe** (format `modded_entity` : les cubes
+- Groupes `proue_bd`/`proue_td` : bordé + liston inclinés, pivot `(14, 1, ±13)`, rotation Y `±51,953°`,
+  longueur 14,6 → pointe à `(23, ±1,5)`. **Une rotation par groupe** (format `modded_entity` : les cubes
   ne tournent pas seuls) → conversion directe en `PartPose.offsetAndRotation`.
 - Pièces de fond/pont de l'étrave taillées à la largeur de leur **bord arrière** : le débord (≤ 3,0)
   reste noyé dans l'épaisseur du bordé incliné (2 / cos 51,953° = 3,25 mesurés en Z) donc invisible ;
@@ -71,10 +73,10 @@ Six places, **pilote assis sur la banquette de poupe** (nistroy 2026-09-20).
 le premier monté pilote.
 | siège | appui | x maquette (px) | travers z (px) | dessus (y_bb) | entité : `along` / `across` / hauteur (blocs) |
 |---|---|---|---|---|---|
-| 0 (barre) | `banquette_poupe` | −19 | 0 | 9 | −1,1875 / 0 / **0,6875** |
-| 1-2 | `banc_milieu_ar` | −8 | ±6,4 | 3 | −0,5 / ∓0,4 / 0,3125 |
-| 3-4 | `banc_milieu_av` | +1 | ±6,4 | 3 | +0,0625 / ∓0,4 / 0,3125 |
-| 5 | `banc_etrave` | +11 | 0 | 3 | +0,6875 / 0 / 0,3125 |
+| 0 (barre) | `banquette_poupe` | −22 | 0 | 9 | −1,375 / 0 / **0,6875** |
+| 1-2 | `banc_milieu_ar` | −10 | ±6,4 | 3 | −0,625 / ∓0,4 / 0,3125 |
+| 3-4 | `banc_milieu_av` | +2 | ±6,4 | 3 | +0,125 / ∓0,4 / 0,3125 |
+| 5 | `banc_etrave` | +13 | 0 | 3 | +0,8125 / 0 / 0,3125 |
 - `ROW_OFFSETS`/`SEAT_OFFSET` ne suffisent plus (rangs inégaux, places centrales, **hauteurs
   différentes**) → table de 6 triplets `(along, across, hauteur)`.
 - `along` = x maquette / 16, `across` = z maquette / 16 ; hauteur = `0,375 + (dessus − 1) / 16 − 0,1875`
@@ -84,9 +86,11 @@ le premier monté pilote.
 - **Moteur reculé pour la grande coque seulement** : `translate(-2/16, 0, 0)` dans
   `BigMotorboatRenderer` avant `renderEngine` (boîte `x −15..−11` → `−17..−13`), calé pile devant la
   banquette. Ne pas toucher `MotorboatRenderer`, la barque 2 places garde son moteur où il est.
-- Bancs resserrés vers la poupe (nistroy 2026-09-20 : trop de plancher vide entre le pilote et le
-  premier banc) : rangs espacés de 9 à 11 px, plus que 3 px entre le moteur et le banc arrière.
-- Plan d'eau : à redimensionner en code (intérieur ≈ 30 × 24) ; il est rendu en `RenderType.waterMask`,
+- **Écart des rangs : 0,75 bloc** (0,69 entre les deux derniers). Référence : vanilla espace ses deux
+  places de **0,8** (offsets `0.2` et `-0.6`, javap 1.21.1). En dessous de ça, les jambes de chacun
+  traversent le dos du précédent — c'est ce qui a fait rallonger la coque (six places à 0,56-0,69
+  dans 42 px, jugé trop serré sur capture 2026-09-20).
+- Plan d'eau : 36 × 24 (intérieur x −22..14, z ±12) ; il est rendu en `RenderType.waterMask`,
   donc ses UV ne sont pas échantillonnées — pas de zone à réserver dans l'atlas.
 
 ## Conversion maquette → modèle du mod (à faire au recâblage)
@@ -145,7 +149,7 @@ le premier monté pilote.
 Repère local : **origine = point d'accrochage** (arête haute du tableau arrière, face extérieure),
 +X vers la proue, Y vers le haut. Conversion : `y_mod = -y_local`, x et z inchangés ; la coque
 translate ensuite jusqu'à son accrochage, d'où un seul modèle pour les deux barques.
-- Accrochages (`MotorboatRenderer.Mount`) : barque 2 places `(-16, -3)`, grande coque `(-21, -8)`.
+- Accrochages (`MotorboatRenderer.Mount`) : barque 2 places `(-16, -3)`, grande coque `(-24, -8)`.
   Le `(-16, -3)` vient du modèle vanilla relevé au javap 1.21.1 : tableau arrière `x -16..-14`,
   parois `y -3..3`, plancher `y 3..6`.
 - Pièces : chape, capot, échappement(s), arbre, embase, hélice (deux pales croisées), barre franche.

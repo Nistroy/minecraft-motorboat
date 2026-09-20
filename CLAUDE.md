@@ -58,7 +58,7 @@ combustible de four, soute (réservoir + moteur + coffre 27), grande barque 6 pl
   l'échelle), DOUBLE = deux hors-bord de base à ±4 unités en travers (`MotorboatRenderer.renderEngine`).
   Le moteur pend **dehors**, accroché au tableau arrière : le modèle est dessiné autour de son point
   d'accrochage et chaque coque passe le sien (`Mount`) — barque 2 places `(-16, -3)`, grande coque
-  `(-21, -8)`. Un seul modèle pour les deux barques.
+  `(-24, -8)`. Un seul modèle pour les deux barques.
 
 ## Conteneur et menu (relevés au javap, 1.21.1)
 - `MenuType.<init>` est privé, l'AW de `fabric-screen-handler-api-v1` le rouvre (Loom l'applique) mais

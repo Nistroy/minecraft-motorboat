@@ -48,7 +48,7 @@ public final class Motorboat implements ModInitializer {
             BuiltInRegistries.ENTITY_TYPE,
             id("big_motorboat"),
             EntityType.Builder.<BigMotorboatEntity>of(BigMotorboatEntity::new, MobCategory.MISC)
-                    .sized(2.25F, 0.5625F)
+                    .sized(2.5F, 0.5625F)
                     .clientTrackingRange(10)
                     .build("big_motorboat"));
 

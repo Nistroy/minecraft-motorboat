@@ -11,6 +11,10 @@ import net.minecraft.util.Mth;
  * translation du rendu, 0,1875 = enfoncement de l'assise, celui de vanilla). Changer la maquette =
  * changer cette table, et {@code PLAN.md} §Plan de sièges avec.
  *
+ * <p>Rangs écartés de 0,75 bloc (0,69 entre les deux derniers) : le bateau vanilla espace ses deux
+ * places de 0,8 (offsets 0,2 et −0,6, relevés au {@code javap}), en dessous les jambes de chacun
+ * traversent le dos du précédent.
+ *
  * <p>Le siège 0 est la barre : {@code Boat.getControllingPassenger} rend le premier passager
  * (relevé au {@code javap}, 1.21.1), donc c'est lui qui pilote.
  */
@@ -25,12 +29,12 @@ public final class SeatPlan {
     private static final double SIDE = 0.4;
 
     private static final Seat[] SEATS = {
-        new Seat(0.0, HELM, -1.1875), // banquette de poupe, devant le moteur
-        new Seat(-SIDE, BENCH, -0.5),
-        new Seat(SIDE, BENCH, -0.5),
-        new Seat(-SIDE, BENCH, 0.0625),
-        new Seat(SIDE, BENCH, 0.0625),
-        new Seat(0.0, BENCH, 0.6875), // banc d'étrave, une place au centre
+        new Seat(0.0, HELM, -1.375), // banquette de poupe, devant le moteur
+        new Seat(-SIDE, BENCH, -0.625),
+        new Seat(SIDE, BENCH, -0.625),
+        new Seat(-SIDE, BENCH, 0.125),
+        new Seat(SIDE, BENCH, 0.125),
+        new Seat(0.0, BENCH, 0.8125), // banc d'étrave, une place au centre
     };
 
     private SeatPlan() {}
