@@ -46,8 +46,9 @@ trop encombrants pour la barque 2 places et ne se posent que sur la grande.
    I B I      I = lingot de fer
               B = n'importe quel bateau
    ```
-2. **Grande barque à moteur** : une barque à moteur entourée de 7 planches. Six places, trois rangs de
-   deux.
+2. **Grande barque à moteur** : une barque à moteur entourée de 7 planches. Six places : le pilote
+   assis sur la banquette de poupe, moteur devant lui, puis deux bancs de deux et une place à l'avant.
+   C'est le **premier monté qui pilote**.
 
    ```
    P P      P = planches (n'importe lesquelles)
@@ -86,7 +87,8 @@ avance, le moteur pousse, fume et fait des bulles. À sec, la barque redevient u
 
 Le carburant ne se consomme que quand on avance : une barque à l'arrêt ne brûle rien. Casser une
 barque rend son contenu — moteur compris — comme un bateau à coffre. La grande barque passe mal dans
-les rivières étroites et sous les ponts bas : sa coque fait 2,25 blocs.
+les rivières étroites et sous les ponts bas : elle occupe 2,25 blocs (sa coque en paraît un peu plus,
+comme le bateau vanilla, mais c'est bien 2,25 qui cognent).
 
 ## Installation
 
