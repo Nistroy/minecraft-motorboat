@@ -32,11 +32,11 @@ Ouverture du menu : accroupi + clic droit **à main vide** (accroupi + combustib
 
 ## Étapes (chacune = build vert + commit)
 - [x] 0. Branche + PLAN.md.
-- [ ] 1. `Motor.autoLoad` (TDD : test rouge d'abord) + conso auto depuis le slot carburant.
-- [ ] 2. Conteneur sur `MotorboatEntity` (28 slots : 0 = carburant, 1-27 = coffre), NBT, drops.
-- [ ] 3. `MotorboatMenu` + enregistrement `ExtendedScreenHandlerType`, ouverture au clic droit accroupi
+- [x] 1. `Motor.autoLoad` (TDD : test rouge d'abord) + conso auto depuis le slot carburant.
+- [x] 2. Conteneur sur `MotorboatEntity` (28 slots : 0 = carburant, 1-27 = coffre), NBT, drops.
+- [x] 3. `MotorboatMenu` + enregistrement `ExtendedScreenHandlerType`, ouverture au clic droit accroupi
       main vide, `quickMoveStack`.
-- [ ] 4. `MotorboatScreen` + texture de GUI générée (176×190, jauge de flamme), lang FR/EN.
+- [x] 4. `MotorboatScreen` + texture de GUI générée (176×190, jauge de flamme), lang FR/EN.
 - [ ] 5. Grande barque : entité 6 places, hitbox, points d'attache, item, recette, lang.
 - [ ] 6. Modèle + rendu de la grande coque (mesh custom + texture générée) + moteur à la poupe.
 - [ ] 7. Docs (`README.md`, `CLAUDE.md` §Suite), version `0.2.0`, PR, merge, tag, pack packwiz du serveur.

@@ -47,4 +47,20 @@ class MotorTest {
         assertEquals(Motor.MAX_FUEL_TICKS, Motor.clamp(Motor.MAX_FUEL_TICKS + 1));
         assertEquals(COAL, Motor.clamp(COAL));
     }
+
+    @Test
+    void autoLoadFillsUpToTheTankAndNeverRefusesFuel() {
+        assertEquals(COAL, Motor.autoLoad(0, COAL));
+        // Un seau de lave (20 000 ticks) dépasse la réserve : on écrête au lieu de refuser, sinon il
+        // resterait coincé dans le slot carburant à chaque tick.
+        assertEquals(Motor.MAX_FUEL_TICKS, Motor.autoLoad(0, 20_000));
+        assertEquals(Motor.MAX_FUEL_TICKS, Motor.autoLoad(Motor.MAX_FUEL_TICKS - 1, COAL));
+    }
+
+    @Test
+    void autoLoadRefusesWhenTankIsFullOrItemDoesNotBurn() {
+        assertEquals(Motor.REFUSED, Motor.autoLoad(Motor.MAX_FUEL_TICKS, COAL));
+        assertEquals(Motor.REFUSED, Motor.autoLoad(0, 0));
+        assertEquals(Motor.REFUSED, Motor.autoLoad(0, -1));
+    }
 }

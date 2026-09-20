@@ -3,16 +3,19 @@ package io.github.nistroy.motorboat;
 import java.io.IOException;
 import java.nio.file.Path;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.Item;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +43,18 @@ public final class Motorboat implements ModInitializer {
 
     public static final Item MOTORBOAT_ITEM = Registry.register(
             BuiltInRegistries.ITEM, id("motorboat"), new MotorboatItem(new Item.Properties().stacksTo(1)));
+
+    /**
+     * Menu de la barque. {@code MenuType.<init>} est privé côté Minecraft : on passe par le type
+     * étendu de Fabric, qui transmet en plus l'id de l'entité au client (jauge de carburant).
+     */
+    public static final MenuType<MotorboatMenu> MOTORBOAT_MENU = Registry.register(
+            BuiltInRegistries.MENU,
+            id("motorboat"),
+            new ExtendedScreenHandlerType<>(
+                    (syncId, inventory, entityId) ->
+                            new MotorboatMenu(syncId, inventory, MotorboatMenu.resolve(inventory, entityId)),
+                    ByteBufCodecs.VAR_INT));
 
     private static MotorboatConfig config = new MotorboatConfig(16.0);
 

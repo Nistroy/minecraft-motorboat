@@ -25,6 +25,18 @@ public final class Motor {
         return fuelTicks + burnTicks;
     }
 
+    /**
+     * Réserve après consommation automatique d'un combustible depuis le slot carburant : écrête à
+     * {@link #MAX_FUEL_TICKS} au lieu de refuser, sinon un combustible plus gros que la réserve (seau
+     * de lave : 20 000 ticks) resterait coincé dans le slot. {@link #REFUSED} si rien ne rentre.
+     */
+    public static int autoLoad(int fuelTicks, int burnTicks) {
+        if (burnTicks <= 0 || fuelTicks >= MAX_FUEL_TICKS) {
+            return REFUSED;
+        }
+        return Math.min(MAX_FUEL_TICKS, fuelTicks + burnTicks);
+    }
+
     /** Réserve après un tick : ne consomme que gaz mis, pour qu'une barque à l'arrêt ne brûle rien. */
     public static int burn(int fuelTicks, boolean throttle) {
         return throttle && fuelTicks > 0 ? fuelTicks - 1 : clamp(fuelTicks);
