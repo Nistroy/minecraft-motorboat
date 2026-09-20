@@ -1,0 +1,24 @@
+{
+	"schemaVersion": 1,
+	"id": "motorboat",
+	"version": "${version}",
+	"name": "Barque à moteur",
+	"description": "Une barque à moteur : bateau vanilla plus un moteur au charbon, deux fois plus rapide tant que ça brûle.",
+	"authors": ["nistroy"],
+	"contact": {
+		"sources": "https://github.com/Nistroy/minecraft-motorboat",
+		"issues": "https://github.com/Nistroy/minecraft-motorboat/issues"
+	},
+	"license": "GPL-3.0-only",
+	"environment": "*",
+	"entrypoints": {
+		"main": ["io.github.nistroy.motorboat.Motorboat"],
+		"client": ["io.github.nistroy.motorboat.client.MotorboatClient"]
+	},
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~1.21.1",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}

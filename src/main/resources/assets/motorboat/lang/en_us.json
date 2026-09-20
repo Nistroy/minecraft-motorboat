@@ -1,0 +1,8 @@
+{
+	"item.motorboat.motor": "Motor",
+	"item.motorboat.motorboat": "Motorboat",
+	"entity.motorboat.motorboat": "Motorboat",
+	"motorboat.message.fuel": "Tank: %s s of running time",
+	"motorboat.message.tank_full": "Tank full",
+	"motorboat.tooltip.motorboat": "Sneak + right-click with fuel to refuel"
+}
