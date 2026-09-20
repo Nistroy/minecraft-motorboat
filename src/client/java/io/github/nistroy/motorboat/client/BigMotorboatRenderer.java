@@ -46,7 +46,7 @@ public class BigMotorboatRenderer extends EntityRenderer<Boat> {
         if (!boat.isUnderWater()) {
             model.waterPatch().render(pose, buffers.getBuffer(RenderType.waterMask()), light, OverlayTexture.NO_OVERLAY);
         }
-        MotorboatRenderer.renderEngine(engine, pose, buffers, light);
+        MotorboatRenderer.renderEngine(engine, pose, buffers, light, MotorboatRenderer.motorOf(boat));
         pose.popPose();
         super.render(boat, yaw, partialTicks, pose, buffers, light);
     }

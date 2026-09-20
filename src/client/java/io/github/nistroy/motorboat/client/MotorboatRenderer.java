@@ -2,7 +2,9 @@ package io.github.nistroy.motorboat.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
+import io.github.nistroy.motorboat.MotorTier;
 import io.github.nistroy.motorboat.Motorboat;
+import io.github.nistroy.motorboat.MotorboatEntity;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -32,6 +34,16 @@ public class MotorboatRenderer extends BoatRenderer {
 
     private static final ResourceLocation ENGINE_TEXTURE = Motorboat.id("textures/entity/motor.png");
 
+    /** Le gros moteur, c'est le même bloc en plus gros ; le double, c'est deux blocs côte à côte. */
+    private static final float BIG_SCALE = 1.35F;
+
+    private static final float[] DOUBLE_OFFSETS = {-3.0F, 3.0F};
+
+    /** Coin du bloc moteur côté proue, au niveau du pont : le gros moteur grossit autour de ce point. */
+    private static final float PIVOT_X = -11.0F;
+
+    private static final float PIVOT_Y = 1.0F;
+
     private final ModelPart engine;
 
     public MotorboatRenderer(EntityRendererProvider.Context context) {
@@ -59,7 +71,7 @@ public class MotorboatRenderer extends BoatRenderer {
         super.render(boat, yaw, partialTicks, pose, buffers, light);
         pose.pushPose();
         applyBoatPose(pose, boat, yaw, partialTicks);
-        renderEngine(engine, pose, buffers, light);
+        renderEngine(engine, pose, buffers, light, motorOf(boat));
         pose.popPose();
     }
 
@@ -85,8 +97,41 @@ public class MotorboatRenderer extends BoatRenderer {
         pose.mulPose(Axis.YP.rotationDegrees(90.0F));
     }
 
-    /** Dessine le bloc moteur, dans le repère posé par {@link #applyBoatPose}. */
-    public static void renderEngine(ModelPart engine, PoseStack pose, MultiBufferSource buffers, int light) {
+    /** Moteur installé sur cette barque, {@link MotorTier#NONE} pour un bateau vanilla. */
+    public static MotorTier motorOf(Boat boat) {
+        return boat instanceof MotorboatEntity motorboat ? motorboat.motor() : MotorTier.NONE;
+    }
+
+    /**
+     * Dessine le moteur, dans le repère posé par {@link #applyBoatPose} : rien sans moteur, le bloc
+     * seul pour le moteur de base, grossi pour le gros, et deux blocs en travers pour le double.
+     * Unités du modèle : 1/16 de bloc, {@code ModelPart} divise les coordonnées des boîtes par 16.
+     */
+    public static void renderEngine(
+            ModelPart engine, PoseStack pose, MultiBufferSource buffers, int light, MotorTier motor) {
+        switch (motor) {
+            case NONE -> {}
+            case BASIC -> drawEngine(engine, pose, buffers, light);
+            case BIG -> {
+                pose.pushPose();
+                pose.translate(PIVOT_X / 16.0F, PIVOT_Y / 16.0F, 0.0F);
+                pose.scale(BIG_SCALE, BIG_SCALE, BIG_SCALE);
+                pose.translate(-PIVOT_X / 16.0F, -PIVOT_Y / 16.0F, 0.0F);
+                drawEngine(engine, pose, buffers, light);
+                pose.popPose();
+            }
+            case DOUBLE -> {
+                for (float across : DOUBLE_OFFSETS) {
+                    pose.pushPose();
+                    pose.translate(0.0F, 0.0F, across / 16.0F);
+                    drawEngine(engine, pose, buffers, light);
+                    pose.popPose();
+                }
+            }
+        }
+    }
+
+    private static void drawEngine(ModelPart engine, PoseStack pose, MultiBufferSource buffers, int light) {
         engine.render(
                 pose, buffers.getBuffer(RenderType.entityCutoutNoCull(ENGINE_TEXTURE)), light, OverlayTexture.NO_OVERLAY);
     }
