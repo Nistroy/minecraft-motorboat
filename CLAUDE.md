@@ -18,8 +18,9 @@ combustible de four, soute (réservoir + moteur + coffre 27), grande barque 6 pl
   `BigMotorboatModel`/`BigMotorboatRenderer` grande coque maison · `MotorboatScreen` écran de la soute.
 - `src/test/java/` — JUnit sur les classes sans Minecraft (`Motor`, `Thrust`, `MotorboatConfig`).
 - `tools/generate_textures.py` — génère les PNG (stdlib seule), textures d'entité et texture de GUI.
-  Boîtes des modèles et coordonnées des slots dupliquées ici : changer le modèle ou la disposition du
-  menu = changer le script. Ne touche **pas** aux sprites d'items (faits main).
+  Boîtes du moteur et coordonnées des slots dupliquées ici : changer ce modèle-là ou la disposition du
+  menu = changer le script. La grande coque fait exception : boîtes et UV **lus** dans
+  `tools/art/big_hull.bbmodel`. Ne touche **pas** aux sprites d'items (faits main).
 - `tools/art/motorboat_items.png` — planche 80 × 16 de nistroy, source des 5 sprites d'items (ordre :
   `motor`, `big_motor`, `double_motor`, `motorboat`, `big_motorboat`). Hors `assets/` : tout PNG de
   `textures/item/` est cousu dans l'atlas des items. `tools/split_item_sheet.py` la redécoupe vers
