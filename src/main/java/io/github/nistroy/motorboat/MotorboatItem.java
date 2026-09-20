@@ -1,15 +1,10 @@
 package io.github.nistroy.motorboat;
 
-import java.util.List;
-import net.minecraft.ChatFormatting;
-import net.minecraft.network.chat.Component;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.gameevent.GameEvent;
@@ -18,7 +13,7 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 /** Pose la barque là où le joueur vise, comme {@code BoatItem} (eau incluse : {@code Fluid.ANY}). */
-public class MotorboatItem extends Item {
+public class MotorboatItem extends TooltipItem {
     /** Constructeur de la barque posée : une taille de coque par type d'item. */
     @FunctionalInterface
     public interface BoatFactory {
@@ -27,17 +22,9 @@ public class MotorboatItem extends Item {
 
     private final BoatFactory factory;
 
-    private final String tooltipKey;
-
     public MotorboatItem(Properties properties, BoatFactory factory, String tooltipKey) {
-        super(properties);
+        super(properties, tooltipKey);
         this.factory = factory;
-        this.tooltipKey = tooltipKey;
-    }
-
-    @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.translatable(tooltipKey).withStyle(ChatFormatting.GRAY));
     }
 
     @Override

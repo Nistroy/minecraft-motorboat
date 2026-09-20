@@ -17,6 +17,7 @@ import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +52,23 @@ public final class Motorboat implements ModInitializer {
                     .clientTrackingRange(10)
                     .build("big_motorboat"));
 
-    public static final Item MOTOR = Registry.register(BuiltInRegistries.ITEM, id("motor"), new Item(new Item.Properties()));
+    /** Moteur de base : la barque 2 places n'a la place que de celui-là. */
+    public static final Item MOTOR = Registry.register(
+            BuiltInRegistries.ITEM, id("motor"), new TooltipItem(new Item.Properties(), "motorboat.tooltip.motor"));
+
+    /** Gros moteur : plus rapide, mais il ne tient que sur la grande coque. */
+    public static final Item BIG_MOTOR =
+            Registry.register(
+                    BuiltInRegistries.ITEM,
+                    id("big_motor"),
+                    new TooltipItem(new Item.Properties(), "motorboat.tooltip.big_motor"));
+
+    /** Double moteur : deux gros moteurs accouplés, le plus rapide, grande coque seulement. */
+    public static final Item DOUBLE_MOTOR =
+            Registry.register(
+                    BuiltInRegistries.ITEM,
+                    id("double_motor"),
+                    new TooltipItem(new Item.Properties(), "motorboat.tooltip.double_motor"));
 
     public static final Item MOTORBOAT_ITEM = Registry.register(
             BuiltInRegistries.ITEM,
@@ -77,7 +94,22 @@ public final class Motorboat implements ModInitializer {
                             new MotorboatMenu(syncId, inventory, MotorboatMenu.resolve(inventory, entityId)),
                     ByteBufCodecs.VAR_INT));
 
-    private static MotorboatConfig config = new MotorboatConfig(16.0);
+    private static MotorboatConfig config = new MotorboatConfig(16.0, 24.0, 32.0, 0.85);
+
+    /** Palier du moteur porté par cet objet, {@link MotorTier#NONE} si ce n'en est pas un. */
+    public static MotorTier motorTier(ItemStack stack) {
+        Item item = stack.getItem();
+        if (item == MOTOR) {
+            return MotorTier.BASIC;
+        }
+        if (item == BIG_MOTOR) {
+            return MotorTier.BIG;
+        }
+        if (item == DOUBLE_MOTOR) {
+            return MotorTier.DOUBLE;
+        }
+        return MotorTier.NONE;
+    }
 
     public static ResourceLocation id(String path) {
         return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
@@ -99,6 +131,8 @@ public final class Motorboat implements ModInitializer {
         }
         ItemGroupEvents.modifyEntriesEvent(TOOLS_AND_UTILITIES).register(entries -> {
             entries.accept(MOTOR);
+            entries.accept(BIG_MOTOR);
+            entries.accept(DOUBLE_MOTOR);
             entries.accept(MOTORBOAT_ITEM);
             entries.accept(BIG_MOTORBOAT_ITEM);
         });

@@ -3,10 +3,13 @@
 	"category": "equipment",
 	"ingredients": [
 		{
-			"item": "motorboat:motor"
+			"tag": "minecraft:boats"
 		},
 		{
-			"tag": "minecraft:boats"
+			"item": "minecraft:iron_ingot"
+		},
+		{
+			"item": "minecraft:iron_ingot"
 		}
 	],
 	"result": {

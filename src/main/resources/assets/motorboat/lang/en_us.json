@@ -4,8 +4,13 @@
 	"entity.motorboat.motorboat": "Motorboat",
 	"motorboat.message.fuel": "Tank: %s s of running time",
 	"motorboat.message.tank_full": "Tank full",
-	"motorboat.tooltip.motorboat": "Sneak + right-click for the hold; with fuel in hand, refuels",
+	"motorboat.tooltip.motorboat": "Sneak + right-click for the hold: motor slot, tank and chest",
 	"item.motorboat.big_motorboat": "Big Motorboat",
 	"entity.motorboat.big_motorboat": "Big Motorboat",
-	"motorboat.tooltip.big_motorboat": "Six seats - sneak + right-click to open the hold"
+	"motorboat.tooltip.big_motorboat": "Six seats, takes every motor - sneak + right-click for the hold",
+	"item.motorboat.big_motor": "Big Motor",
+	"item.motorboat.double_motor": "Double Motor",
+	"motorboat.tooltip.motor": "Fits any hull - put it in the motor slot of the hold",
+	"motorboat.tooltip.big_motor": "Big hull only - faster than the basic motor",
+	"motorboat.tooltip.double_motor": "Big hull only - the fastest"
 }
