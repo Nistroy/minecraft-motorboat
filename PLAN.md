@@ -13,8 +13,12 @@ Fichier de reprise : session qui repart lit **ça** puis `CLAUDE.md`. Mettre à 
 Coque de la grande barque jugée trop « radeau » (caisse : fond plat + 4 parois droites). **nistroy
 modélise dans Blockbench et refait les sprites d'items ; l'agent recâble, ne crée pas l'art.**
 
-Livrables attendus de nistroy : `.bbmodel` (projet, pas un export), PNG de texture de coque, sprites
-d'items 16×16. Transfert : branche `art/coque` du dépôt (upload web GitHub) ou pièce jointe Discord.
+- Sprites d'items : **livrés et en place** 2026-09-20 (branche `feat/item-sprites`), planche
+  `tools/art/motorboat_items.png`.
+- Reste attendu de nistroy : `.bbmodel` (projet, pas un export) + PNG de texture de coque
+  (`256 × 128` aujourd'hui). Transfert : branche `art/coque` (upload web GitHub) ou Discord.
+- Pas de tag tant que la coque n'est pas là : sprites + coque sortent ensemble en `0.4.0`
+  (choix nistroy 2026-09-20).
 
 ## Contraintes données à nistroy (ne pas les contredire)
 - 1 unité Blockbench = 1 px Minecraft = 1/16 bloc ; modéliser **Y vers le haut**, l'agent gère l'inversion.
@@ -33,14 +37,17 @@ d'items 16×16. Transfert : branche `art/coque` du dépôt (upload web GitHub) o
 - Rendu du moteur par palier (`MotorboatRenderer.renderEngine`) : BASIC = bloc, BIG = ×1,35 autour de
   `(-11, 1)`, DOUBLE = deux blocs à `±3` en Z. Recalculer ces nombres si le bloc moteur change.
 
-## Étapes quand l'art arrive
-- [ ] 1. Récupérer les fichiers (branche `art/coque` ou Discord), les lire avant de coder.
+## Étapes
+- [x] 1. Sprites d'items reçus (planche 80 × 16, 5 × 16 × 16, palette de `tools/motorboat_sprites.lua`).
+- [x] 3b. Sprites découpés vers `assets/motorboat/textures/item/` par `tools/split_item_sheet.py`
+      (pixels identiques à la planche, vérifié) ; planche gardée hors de `assets/`.
+- [x] 4. Fonctions de sprites d'items retirées de `tools/generate_textures.py` (il les écrasait),
+      en-tête + carte de `CLAUDE.md` à jour.
 - [ ] 2. `.bbmodel` → `BigMotorboatModel.createBodyModel()` : cubes `from`/`to`/`origin`/`rotation`/`uv`,
       attention `inflate` et pivots ; convertir Y-up Blockbench vers le repère du mod.
-- [ ] 3. Textures en place (`assets/motorboat/textures/entity/`, `.../item/`) ; ajuster
-      `TEXTURE_WIDTH`/`TEXTURE_HEIGHT` si nistroy a changé la taille.
-- [ ] 4. **Retirer de `tools/generate_textures.py`** les fonctions des fichiers faits main (sinon le
-      script les écrase) + mettre à jour son en-tête et la carte de `CLAUDE.md`.
+- [ ] 3a. Texture de coque en place (`assets/motorboat/textures/entity/`) ; ajuster
+      `TEXTURE_WIDTH`/`TEXTURE_HEIGHT` si nistroy a changé la taille, et retirer `big_hull_texture()`
+      de `tools/generate_textures.py`.
 - [ ] 5. Sièges et `sized()` réajustés si les proportions changent.
 - [ ] 6. `./gradlew build` vert **et** `./gradlew runClient` (le rendu ne se vérifie pas autrement).
 - [ ] 7. Version `0.4.0`, PR, merge, tag `v0.4.0` → release (workflow : tag = `version` de

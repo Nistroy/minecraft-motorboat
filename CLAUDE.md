@@ -17,9 +17,13 @@ combustible de four, soute (réservoir + moteur + coffre 27), grande barque 6 pl
   vanilla (`BoatRenderer`) + bloc moteur, et repère commun `applyBoatPose` ·
   `BigMotorboatModel`/`BigMotorboatRenderer` grande coque maison · `MotorboatScreen` écran de la soute.
 - `src/test/java/` — JUnit sur les classes sans Minecraft (`Motor`, `Thrust`, `MotorboatConfig`).
-- `tools/generate_textures.py` — génère les PNG (stdlib seule), textures d'entité, sprites d'items et
-  texture de GUI. Boîtes des modèles et coordonnées des slots dupliquées ici : changer le modèle ou la
-  disposition du menu = changer le script.
+- `tools/generate_textures.py` — génère les PNG (stdlib seule), textures d'entité et texture de GUI.
+  Boîtes des modèles et coordonnées des slots dupliquées ici : changer le modèle ou la disposition du
+  menu = changer le script. Ne touche **pas** aux sprites d'items (faits main).
+- `tools/art/motorboat_items.png` — planche 80 × 16 de nistroy, source des 5 sprites d'items (ordre :
+  `motor`, `big_motor`, `double_motor`, `motorboat`, `big_motorboat`). Hors `assets/` : tout PNG de
+  `textures/item/` est cousu dans l'atlas des items. `tools/split_item_sheet.py` la redécoupe vers
+  `assets/motorboat/textures/item/` — relancer après chaque retouche de la planche.
 
 ## Répartition client/serveur (ne pas se tromper)
 - Vanilla : le **client du pilote** simule le bateau et envoie sa position ; seul `LocalPlayer`
