@@ -1,19 +1,24 @@
 # minecraft-motorboat — instructions agents
 
 Mod Fabric 1.21.1 (client + serveur, `required` des deux côtés) : bateau vanilla + moteur à
-combustible de four, 2× la vitesse vanilla. Public, GPL-3.0. Pour le serveur `minecraft-server`
+combustible de four, 2× la vitesse vanilla, soute (réservoir + coffre 27), et une grande barque
+6 places à coque maison. Public, GPL-3.0. Pour le serveur `minecraft-server`
 (spec d'origine : `MODS.md` §8 de ce dépôt-là). Docs `.md` = notes denses pour agents, sauf
 `README.md` (humains).
 
 ## Carte
 - `src/main/java/io/github/nistroy/motorboat/` — `Motorboat` registres + config · `MotorboatEntity`
-  entité (hérite `Boat`) · `MotorboatItem` pose sur l'eau · `Motor` réserve de carburant (pur) ·
-  `Thrust` maths de poussée (pur) · `MotorboatConfig` JSON.
+  entité 2 places (hérite `Boat`, porte le conteneur) · `BigMotorboatEntity` 6 places (hérite
+  `MotorboatEntity`) · `MotorboatItem` pose sur l'eau, une fabrique de coque par item ·
+  `MotorboatMenu` réservoir + coffre · `Motor` réserve de carburant (pur) · `Thrust` maths de poussée
+  (pur) · `MotorboatConfig` JSON.
 - `src/client/java/.../client/` — `MotorboatClient` enregistrement · `MotorboatRenderer` coque
-  vanilla (`BoatRenderer`) + bloc moteur.
+  vanilla (`BoatRenderer`) + bloc moteur, et repère commun `applyBoatPose` ·
+  `BigMotorboatModel`/`BigMotorboatRenderer` grande coque maison · `MotorboatScreen` écran de la soute.
 - `src/test/java/` — JUnit sur les classes sans Minecraft (`Motor`, `Thrust`, `MotorboatConfig`).
-- `tools/generate_textures.py` — génère les PNG (stdlib seule). Boîtes du modèle dupliquées ici :
-  changer le modèle = changer le script.
+- `tools/generate_textures.py` — génère les PNG (stdlib seule), textures d'entité, sprites d'items et
+  texture de GUI. Boîtes des modèles et coordonnées des slots dupliquées ici : changer le modèle ou la
+  disposition du menu = changer le script.
 
 ## Répartition client/serveur (ne pas se tromper)
 - Vanilla : le **client du pilote** simule le bateau et envoie sa position ; seul `LocalPlayer`
@@ -24,6 +29,19 @@ combustible de four, 2× la vitesse vanilla. Public, GPL-3.0. Pour le serveur `m
 - Contrôle serveur `moved too quickly` : refus si distance² du paquet − vitesse² > 100
   (`ServerGamePacketListenerImpl.handleMoveVehicle`, vérifié au javap 1.21.1). 16 blocs/s = 0,8
   bloc/tick : très en dessous.
+
+## Conteneur et menu (relevés au javap, 1.21.1)
+- `MenuType.<init>` est privé, l'AW de `fabric-screen-handler-api-v1` le rouvre (Loom l'applique) mais
+  le client a besoin de l'id de l'entité → `ExtendedScreenHandlerType<MotorboatMenu, Integer>` +
+  `ByteBufCodecs.VAR_INT`, entité implémentant `ExtendedScreenHandlerFactory<Integer>`.
+- 28 slots : 0 = réservoir (`AbstractFurnaceBlockEntity.isFuel`), 1-27 = coffre. NBT, drops et
+  `SlotAccess` viennent des `default` de `ContainerEntity` (comme `ChestBoat`), pas réécrits.
+- Un combustible plus gros que la réserve (seau de lave, 20 000 ticks > 12 000) : `Motor.load` refuse
+  (plein à la main), `Motor.autoLoad` écrête (soute) — sinon le slot se bloquerait. Contenant rendu
+  comme dans un four.
+- Attaches des passagers : `new Vec3(travers, hauteur, avant).yRot(-yRot)` — **Z vers la proue**,
+  X en travers (vérifié au `javap -c` sur `Boat.getPassengerAttachmentPoint`).
+- Repère du modèle après le rendu de bateau : +X = proue, **-Y = haut** (`scale(-1, -1, 1)`).
 
 ## Physique vanilla (relevée au javap, 1.21.1)
 Ordre d'un tick de `Boat` : `floatBoat` (vitesse × `invFriction`) → `controlBoat` (+0,04 bloc/tick²
@@ -51,9 +69,17 @@ vers l'avant) → `move`. `invFriction` = 0.9 dans l'eau, 0.45 sous l'eau, 0.05 
 - Ajout au serveur = mod `required` des deux côtés → passe par le pack packwiz + le vote Discord,
   comme tout ajout de mod (`CLAUDE.md` de `minecraft-server`).
 
-## Suite (v0.2, décidé 2026-09-20)
-- Barque plus grosse, plusieurs places (nistroy : « plusieurs personnes puissent monter dessus ») :
-  coque custom allongée, `getMaxPassengers` + `getPassengerAttachmentPoint` à réécrire, hitbox à
-  élargir. Hors périmètre v0.1.
-- Garder le bois du bateau utilisé au craft (aujourd'hui : coque chêne quel que soit le bateau).
+## Suite
+- Garder le bois du bateau utilisé au craft (aujourd'hui : coque chêne quel que soit le bateau, et
+  coque unique pour la grande barque).
+- Rames visibles sur la grande barque : pas de modèle de rame (elle est à moteur), la rame marche
+  quand même.
 - **Jamais** : pont praticable en mouvement (écarté par nistroy — demanderait mixins client + physique).
+
+## Ce que le test automatisé ne couvre pas
+Vérifié en v0.2 par RCON sur `runServer` (voir `PLAN.md`) : enregistrement des entités, NBT
+`Fuel`/`Items`, slot réservoir, conso auto (8 charbons → 7, réserve 1600), écrêtage du seau de lave.
+**Pas** vérifiable sans joueur humain : rendu des coques et du GUI, position des six sièges, ouverture
+du menu au clic droit. `/ride ... mount` force le montage (court-circuite `canAddPassenger`) et la
+position des passagers n'est pas observable en NBT sans client — la barque vanilla donne le même
+relevé plat, c'est la mesure qui ne voit rien, pas le code.

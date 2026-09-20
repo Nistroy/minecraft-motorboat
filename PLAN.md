@@ -39,7 +39,16 @@ Ouverture du menu : accroupi + clic droit **à main vide** (accroupi + combustib
 - [x] 4. `MotorboatScreen` + texture de GUI générée (176×190, jauge de flamme), lang FR/EN.
 - [x] 5. Grande barque : entité 6 places, hitbox, points d'attache, item, recette, lang.
 - [x] 6. Modèle + rendu de la grande coque (mesh custom + texture générée) + moteur à la poupe.
-- [ ] 7. Docs (`README.md`, `CLAUDE.md` §Suite), version `0.2.0`, PR, merge, tag, pack packwiz du serveur.
+- [x] 7. Docs (`README.md`, `CLAUDE.md`), version `0.2.0`, PR, merge.
+- [ ] 8. **Test en jeu par nistroy** (seule étape restante avant diffusion) : rendu des deux coques,
+      ouverture du menu, six places assises, jauge de flamme.
+- [ ] 9. Après feu vert : tag `v0.2.0` → release → `pack/mods/motorboat.pw.toml` du dépôt
+      `minecraft-server` (touche les joueurs : demander avant).
+
+## Vérifié le 2026-09-20 (RCON sur `runServer`)
+`Fuel`/`Items` en NBT · `container.0` n'accepte que du combustible · conso auto : 8 charbons → 7,
+réserve 0 → 1600 · seau de lave → réserve écrêtée à 12 000 + seau vide rendu · `runClient` démarre
+sans texture ni modèle manquant. Le reste demande un joueur humain (voir `CLAUDE.md`).
 
 ## Vérifications
 - `JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home ./gradlew build`
