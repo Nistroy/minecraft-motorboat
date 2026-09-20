@@ -1,17 +1,18 @@
 # minecraft-motorboat — instructions agents
 
 Mod Fabric 1.21.1 (client + serveur, `required` des deux côtés) : bateau vanilla + moteur à
-combustible de four, 2× la vitesse vanilla, soute (réservoir + coffre 27), et une grande barque
-6 places à coque maison. Public, GPL-3.0. Pour le serveur `minecraft-server`
+combustible de four, soute (réservoir + moteur + coffre 27), grande barque 6 places à coque maison,
+3 paliers de moteur. Public, GPL-3.0. Pour le serveur `minecraft-server`
 (spec d'origine : `MODS.md` §8 de ce dépôt-là). Docs `.md` = notes denses pour agents, sauf
 `README.md` (humains).
 
 ## Carte
-- `src/main/java/io/github/nistroy/motorboat/` — `Motorboat` registres + config · `MotorboatEntity`
-  entité 2 places (hérite `Boat`, porte le conteneur) · `BigMotorboatEntity` 6 places (hérite
-  `MotorboatEntity`) · `MotorboatItem` pose sur l'eau, une fabrique de coque par item ·
-  `MotorboatMenu` réservoir + coffre · `Motor` réserve de carburant (pur) · `Thrust` maths de poussée
-  (pur) · `MotorboatConfig` JSON.
+- `src/main/java/io/github/nistroy/motorboat/` — `Motorboat` registres + config + `motorTier(ItemStack)` ·
+  `MotorboatEntity` entité 2 places (hérite `Boat`, porte le conteneur) · `BigMotorboatEntity` 6 places
+  (hérite `MotorboatEntity`, `isBigHull()` vrai) · `MotorboatItem` pose sur l'eau, une fabrique de coque
+  par item · `TooltipItem` item à infobulle d'une ligne (moteurs, coques) · `MotorboatMenu` réservoir +
+  moteur + coffre · `Motor` réserve de carburant (pur) · `MotorTier` palier de moteur (pur) · `Thrust`
+  maths de poussée (pur) · `MotorboatConfig` JSON.
 - `src/client/java/.../client/` — `MotorboatClient` enregistrement · `MotorboatRenderer` coque
   vanilla (`BoatRenderer`) + bloc moteur, et repère commun `applyBoatPose` ·
   `BigMotorboatModel`/`BigMotorboatRenderer` grande coque maison · `MotorboatScreen` écran de la soute.
@@ -27,15 +28,36 @@ combustible de four, 2× la vitesse vanilla, soute (réservoir + coffre 27), et 
   `ServerboundPlayerInputPacket`) → c'est lui qui consomme le carburant et fait autorité dessus
   (`SynchedEntityData`).
 - Contrôle serveur `moved too quickly` : refus si distance² du paquet − vitesse² > 100
-  (`ServerGamePacketListenerImpl.handleMoveVehicle`, vérifié au javap 1.21.1). 16 blocs/s = 0,8
-  bloc/tick : très en dessous.
+  (`ServerGamePacketListenerImpl.handleMoveVehicle`, vérifié au javap 1.21.1). 32 blocs/s = 1,6
+  bloc/tick : toujours très en dessous.
+
+## Moteurs (v0.3)
+- 3 items : `motor` (BASIC), `big_motor` (BIG), `double_motor` (DOUBLE) ; `MotorTier.NONE` = slot vide
+  → bateau à rames, rien consommé, pas de bloc moteur dessiné.
+- `MotorTier.fitsHull(bigHull)` : la coque 2 places ne prend que BASIC (place sur le pont), la grande
+  prend les trois. Appliqué par `MotorboatEntity.acceptsMotor` → `MotorSlot.mayPlace`.
+- Vitesses (`MotorboatConfig.topSpeed(tier, bigHull)`) : 16 / 24 / 32 blocs/s × 0,85 sur la grande
+  coque. Aucun plafond de config (choix nistroy 2026-09-20), seulement > 0 et facteur dans ]0, 1].
+  Ancienne clé `topSpeedBlocksPerSecond` relue comme vitesse du moteur de base.
+- Le palier vit dans le slot 28 du conteneur (pas de NBT à part) mais le contenu n'est envoyé au
+  client que menu ouvert → il est aussi publié en `SynchedEntityData` (`DATA_MOTOR`) pour la poussée
+  (simulée par le client du pilote) et le rendu.
+- Coque craftée **sans** moteur (bateau + 2 fer) : sinon casser la barque rendrait coque + moteur,
+  soit un moteur gratuit par cycle.
+- Rendu : BASIC = bloc moteur, BIG = même bloc × 1,35 autour du coin poupe/pont, DOUBLE = deux blocs
+  à ±3 unités en travers (`MotorboatRenderer.renderEngine`).
 
 ## Conteneur et menu (relevés au javap, 1.21.1)
 - `MenuType.<init>` est privé, l'AW de `fabric-screen-handler-api-v1` le rouvre (Loom l'applique) mais
   le client a besoin de l'id de l'entité → `ExtendedScreenHandlerType<MotorboatMenu, Integer>` +
   `ByteBufCodecs.VAR_INT`, entité implémentant `ExtendedScreenHandlerFactory<Integer>`.
-- 28 slots : 0 = réservoir (`AbstractFurnaceBlockEntity.isFuel`), 1-27 = coffre. NBT, drops et
+- 29 slots : 0 = réservoir (`AbstractFurnaceBlockEntity.isFuel`), 1-27 = coffre, 28 = moteur (rangé
+  en dernier pour ne pas décaler les barques déjà posées). Index de menu ≠ index de conteneur : le
+  slot moteur est le 2ᵉ du menu, `quickMoveStack` utilise les constantes `MENU_*`. NBT, drops et
   `SlotAccess` viennent des `default` de `ContainerEntity` (comme `ChestBoat`), pas réécrits.
+- `AbstractContainerMenu.moveItemStackTo` vérifie `mayPlace` et `Slot.getMaxStackSize(stack)` sur la
+  branche « slot vide » (javap 1.21.1) → un shift-clic ne peut pas forcer un gros moteur sur la
+  petite coque, et le slot moteur reste à 1 objet.
 - Un combustible plus gros que la réserve (seau de lave, 20 000 ticks > 12 000) : `Motor.load` refuse
   (plein à la main), `Motor.autoLoad` écrête (soute) — sinon le slot se bloquerait. Contenant rendu
   comme dans un four.
@@ -77,9 +99,12 @@ vers l'avant) → `move`. `invFriction` = 0.9 dans l'eau, 0.45 sous l'eau, 0.05 
 - **Jamais** : pont praticable en mouvement (écarté par nistroy — demanderait mixins client + physique).
 
 ## Ce que le test automatisé ne couvre pas
-Vérifié en v0.2 par RCON sur `runServer` (voir `PLAN.md`) : enregistrement des entités, NBT
-`Fuel`/`Items`, slot réservoir, conso auto (8 charbons → 7, réserve 1600), écrêtage du seau de lave.
-**Pas** vérifiable sans joueur humain : rendu des coques et du GUI, position des six sièges, ouverture
-du menu au clic droit. `/ride ... mount` force le montage (court-circuite `canAddPassenger`) et la
+Vérifié par RCON sur `runServer` (voir `PLAN.md`) : enregistrement des entités et des items, NBT
+`Fuel`/`Items`, slot réservoir, slot moteur (28), conso auto seulement moteur posé, écrêtage du seau
+de lave. **Piège RCON** : sans joueur les entités ne tiquent pas dans les chunks de spawn →
+`forceload add 0 0` avant toute mesure, sinon `Fuel` reste à 0 et on croit à un bug.
+**Pas** vérifiable sans joueur humain : rendu des coques, des trois moteurs et du GUI, position des six
+sièges, ouverture du menu au clic droit, refus du gros moteur sur la petite coque (passe par `mayPlace`),
+vitesse réelle de chaque palier. `/ride ... mount` force le montage (court-circuite `canAddPassenger`) et la
 position des passagers n'est pas observable en NBT sans client — la barque vanilla donne le même
 relevé plat, c'est la mesure qui ne voit rien, pas le code.
