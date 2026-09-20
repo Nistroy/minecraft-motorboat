@@ -65,9 +65,9 @@ le premier monté pilote.
 | siège | appui | x maquette (px) | travers z (px) | dessus (y_bb) | entité : `along` / `across` / hauteur (blocs) |
 |---|---|---|---|---|---|
 | 0 (barre) | `banquette_poupe` | −19 | 0 | 9 | −1,1875 / 0 / **0,6875** |
-| 1-2 | `banc_milieu_ar` | −4 | ±6,4 | 3 | −0,25 / ∓0,4 / 0,3125 |
-| 3-4 | `banc_milieu_av` | +5 | ±6,4 | 3 | +0,3125 / ∓0,4 / 0,3125 |
-| 5 | `banc_etrave` | +13,5 | 0 | 3 | +0,84375 / 0 / 0,3125 |
+| 1-2 | `banc_milieu_ar` | −8 | ±6,4 | 3 | −0,5 / ∓0,4 / 0,3125 |
+| 3-4 | `banc_milieu_av` | +1 | ±6,4 | 3 | +0,0625 / ∓0,4 / 0,3125 |
+| 5 | `banc_etrave` | +11 | 0 | 3 | +0,6875 / 0 / 0,3125 |
 - `ROW_OFFSETS`/`SEAT_OFFSET` ne suffisent plus (rangs inégaux, places centrales, **hauteurs
   différentes**) → table de 6 triplets `(along, across, hauteur)`.
 - `along` = x maquette / 16, `across` = z maquette / 16 ; hauteur = `0,375 + (dessus − 1) / 16 − 0,1875`
@@ -77,6 +77,8 @@ le premier monté pilote.
 - **Moteur reculé pour la grande coque seulement** : `translate(-2/16, 0, 0)` dans
   `BigMotorboatRenderer` avant `renderEngine` (boîte `x −15..−11` → `−17..−13`), calé pile devant la
   banquette. Ne pas toucher `MotorboatRenderer`, la barque 2 places garde son moteur où il est.
+- Bancs resserrés vers la poupe (nistroy 2026-09-20 : trop de plancher vide entre le pilote et le
+  premier banc) : rangs espacés de 9 à 11 px, plus que 3 px entre le moteur et le banc arrière.
 - Plan d'eau : à redimensionner en code (intérieur ≈ 30 × 24) ; il est rendu en `RenderType.waterMask`,
   donc ses UV ne sont pas échantillonnées — pas de zone à réserver dans l'atlas.
 
